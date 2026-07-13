@@ -36,13 +36,16 @@ export type ParametrosImpresion = {
 export type CapaTinta = {
   ref: number;
   activoReceta: string; // nombre del activo tal como vino en la receta
-  dosisMg: number | null; // dosis POR TOMA en mg (editable; UI requiere conversión manual)
+  dosisMg: number | null; // dosis POR TOMA en mg DE MATERIA PRIMA (editable)
+  dosisOriginal?: number | null; // dosis tal como vino en la receta (para conversiones por tinta)
   unidadOriginal: string; // unidad de la receta (mg, µg, UI...)
   tintaId: number | null; // referencia al catálogo (null = manual)
   tinta: string; // nombre de la tinta usada
   concentracion: number | null; // concentración usada (editable, dilución en vivo)
   ip: number | null; // IP de la tinta (siempre se mantiene)
-  ubicacion: string; // cuerpo | tapa
+  ubicacion: string; // cuerpo | tapa (la tapa SOLO se usa si el cuerpo supera 0.9 mL)
+  ubicacionManual?: boolean; // true = el operador fijó la ubicación a mano
+  aptaTapa?: boolean; // la tinta puede ir a la tapa (PEG/CoQ10/Idebenona)
   lote: string; // lote del producto intermedio usado (manual)
   poe: string;
   alerta: string; // alerta química de la tinta
@@ -93,7 +96,14 @@ export const tintas = pgTable('tintas', {
   concentracion: real('concentracion').notNull().default(0.5), // decimal (0.5 = 50%)
   ip: real('ip').notNull().default(1), // Índice Palmieri
   aManopla: boolean('a_manopla').notNull().default(false),
-  ubicacion: text('ubicacion').notNull().default('cuerpo'), // cuerpo | tapa
+  // 'tapa' = APTA para tapa (PEG/CoQ10/Idebenona): va a la tapa SOLO cuando
+  // el cuerpo supera 0.9 mL. 'cuerpo' = siempre al cuerpo (ej. oleogeles).
+  ubicacion: text('ubicacion').notNull().default('cuerpo'),
+  // Conversión de dosis: si la receta viene en convUnidad (ej. 'UI' o 'µg'),
+  // dosisMg = dosis × convMgPorUnidad (mg de materia prima por unidad).
+  // Ej: levadura de selenio 0,2% Se → convUnidad 'µg', factor 0,5.
+  convUnidad: text('conv_unidad').notNull().default(''),
+  convMgPorUnidad: real('conv_mg_por_unidad'),
   excipientes: jsonb('excipientes').$type<ExcipienteTinta[]>().notNull().default([]),
   parametros: jsonb('parametros').$type<ParametrosImpresion | null>().default(null),
   alerta: text('alerta').notNull().default(''),

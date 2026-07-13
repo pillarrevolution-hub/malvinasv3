@@ -8,6 +8,14 @@
 // - División automática: cápsulas por toma = ceil(volumen total ÷ 0.95)
 // - Mínimo de extrusión de la impresora: 0.03 mL por capa
 // - Capacidad: cuerpo 0.9 mL + tapa 0.1 mL (límite de trabajo 0.95 por expansión)
+// - LA TAPA NO SE LLENA salvo que el cuerpo supere 0.9 mL. Recién ahí se
+//   pasa a la tapa una capa APTA para tapa (tintas en PEG, CoQ10, Idebenona;
+//   las de oleogel nunca). tinta.ubicacion = 'tapa' significa "APTA para
+//   tapa", no "va siempre a la tapa".
+// - Conversión de dosis por tinta: si la receta viene en otra unidad
+//   (UI, µg de elemento), cada tinta puede definir cuántos mg de materia
+//   prima equivalen a 1 unidad de receta (ej: levadura de selenio 0,2% Se
+//   → 1 µg de Se = 0,5 mg de levadura).
 // - Dilución: apunta a llenar 0.8 mL; por debajo de 0.55 mL la cápsula
 //   queda "demasiado vacía". NUNCA se sugiere concentrar.
 // ================================================================
@@ -22,12 +30,36 @@ export const OBJETIVO_LLENADO_ML = 0.8;
 export const MINIMO_ACEPTADO_ML = 0.55;
 
 // ---------- Conversión de unidades a mg ----------
+export function normUnidad(unidad: string): string {
+  const u = (unidad ?? '').trim().toLowerCase().replace('μ', 'µ');
+  if (u === 'ug' || u === 'mcg' || u === 'µg') return 'µg';
+  if (u === 'ui' || u === 'u.i.' || u === 'iu') return 'UI';
+  return u; // mg, g, ml, %
+}
+
 export function aMg(dosis: number, unidad: string): number | null {
-  const u = unidad.toLowerCase().replace('μ', 'µ');
+  const u = normUnidad(unidad);
   if (u === 'mg') return dosis;
-  if (u === 'µg' || u === 'ug' || u === 'mcg') return dosis / 1000;
+  if (u === 'µg') return dosis / 1000;
   if (u === 'g') return dosis * 1000;
-  return null; // UI, ml, % → requieren conversión manual según la tinta
+  return null; // UI, ml, % → requieren conversión según la tinta
+}
+
+// Dosis efectiva EN MG DE MATERIA PRIMA para una tinta dada.
+// Si la tinta define conversión (convUnidad + convMgPorUnidad) y la unidad
+// de la receta coincide, se usa ese factor (ej: selenio en µg → mg de
+// levadura). Si no, se convierte por masa (mg/µg/g). UI sin factor → null.
+export function dosisEnMgParaTinta(
+  dosis: number | null | undefined,
+  unidad: string,
+  t: Tinta | null | undefined
+): { mg: number | null; convertida: boolean } {
+  if (dosis == null || !(dosis > 0)) return { mg: null, convertida: false };
+  const u = normUnidad(unidad);
+  if (t?.convMgPorUnidad && t.convMgPorUnidad > 0 && t.convUnidad && normUnidad(t.convUnidad) === u) {
+    return { mg: dosis * t.convMgPorUnidad, convertida: true };
+  }
+  return { mg: aMg(dosis, unidad), convertida: false };
 }
 
 // ---------- Cálculo por capa ----------
@@ -169,16 +201,20 @@ function normalizar(s: string): string {
 
 export type OpcionTinta = {
   tinta: Tinta;
-  extrusion: number | null; // con dosisMg dada, cápsulas por toma = 1
+  dosisMg: number | null; // dosis convertida a mg de materia prima PARA ESTA TINTA
+  convertida: boolean; // true si se usó el factor de conversión de la tinta
+  extrusion: number | null; // con la dosis dada, cápsulas por toma = 1
   imprimible: boolean; // extrusión >= 0.03
 };
 
 // Devuelve las tintas que matchean un activo de la receta, ordenadas:
 // primero las imprimibles de menor volumen (criterio: la que menos ocupa),
-// después las que quedan bajo el mínimo.
+// después las que quedan bajo el mínimo. La dosis se convierte por tinta
+// (factor de conversión propio si lo tiene; si no, por masa).
 export function tintasParaActivo(
   activoReceta: string,
-  dosisMg: number | null,
+  dosis: number | null,
+  unidad: string,
   catalogo: Tinta[]
 ): OpcionTinta[] {
   const objetivo = normalizar(activoReceta);
@@ -199,8 +235,15 @@ export function tintasParaActivo(
   });
 
   const opciones: OpcionTinta[] = matches.map((t) => {
-    const extrusion = extrusionCapa(dosisMg, t.concentracion, t.ip, 1);
-    return { tinta: t, extrusion, imprimible: extrusion !== null && extrusion >= EXTRUSION_MINIMA_ML };
+    const { mg, convertida } = dosisEnMgParaTinta(dosis, unidad, t);
+    const extrusion = extrusionCapa(mg, t.concentracion, t.ip, 1);
+    return {
+      tinta: t,
+      dosisMg: mg,
+      convertida,
+      extrusion,
+      imprimible: extrusion !== null && extrusion >= EXTRUSION_MINIMA_ML,
+    };
   });
 
   return opciones.sort((a, b) => {
@@ -209,30 +252,85 @@ export function tintasParaActivo(
   });
 }
 
-// Crear una capa a partir de una tinta del catálogo
+// Crear una capa a partir de una tinta del catálogo.
+// dosis y unidad son LOS DE LA RECETA (originales); la dosis en mg de
+// materia prima se calcula acá según la tinta (con su conversión si aplica).
+// La ubicación arranca SIEMPRE en cuerpo: la tapa solo se usa cuando el
+// cuerpo supera 0.9 mL (ver autoUbicarCapas).
 export function capaDesdeTinta(
   ref: number,
   activoReceta: string,
-  dosisMg: number | null,
-  unidadOriginal: string,
+  dosis: number | null,
+  unidad: string,
   t: Tinta | null
 ): CapaTinta {
+  const { mg } = dosisEnMgParaTinta(dosis, unidad, t);
   return {
     ref,
     activoReceta,
-    dosisMg,
-    unidadOriginal,
+    dosisMg: mg,
+    dosisOriginal: dosis,
+    unidadOriginal: unidad,
     tintaId: t?.id ?? null,
     tinta: t?.nombre ?? '',
     concentracion: t?.concentracion ?? null,
     ip: t?.ip ?? null,
-    ubicacion: t?.ubicacion ?? 'cuerpo',
+    ubicacion: 'cuerpo',
+    ubicacionManual: false,
+    aptaTapa: t?.ubicacion === 'tapa',
     lote: '',
     poe: t?.poe ?? '',
     alerta: t?.alerta ?? '',
     aManopla: t?.aManopla ?? false,
     extrusionMl: null,
   };
+}
+
+// ---------- Ubicación automática cuerpo/tapa ----------
+// Regla: TODO va al cuerpo. Solo si el cuerpo supera 0.9 mL se pasan a la
+// tapa capas APTAS (tintas en PEG/CoQ10/Idebenona) que entren en 0.1 mL,
+// empezando por la de mayor volumen que quepa. Las capas con ubicación
+// fijada a mano (ubicacionManual) se respetan siempre.
+export function autoUbicarCapas(
+  capas: CapaTinta[],
+  capsulasPorToma: number,
+  catalogo: Tinta[]
+): CapaTinta[] {
+  const EPS = 1e-9;
+  const info = capas.map((c) => {
+    const ext = extrusionCapa(c.dosisMg, c.concentracion, c.ip, capsulasPorToma) ?? 0;
+    // Compatibilidad con capas viejas sin aptaTapa: se deriva del catálogo.
+    const apta =
+      c.aptaTapa ?? (c.tintaId != null && catalogo.find((t) => t.id === c.tintaId)?.ubicacion === 'tapa');
+    return { ext, apta: !!apta };
+  });
+
+  // Las manuales quedan como están; el resto arranca en el cuerpo.
+  const out: CapaTinta[] = capas.map((c, i) =>
+    c.ubicacionManual ? { ...c, aptaTapa: info[i].apta } : { ...c, ubicacion: 'cuerpo', aptaTapa: info[i].apta }
+  );
+
+  let cuerpo = 0;
+  let tapa = 0;
+  out.forEach((c, i) => {
+    if (c.ubicacion === 'tapa') tapa += info[i].ext;
+    else cuerpo += info[i].ext;
+  });
+
+  while (cuerpo > CAPACIDAD_CUERPO_ML + EPS) {
+    let mejor = -1;
+    for (let i = 0; i < out.length; i++) {
+      if (out[i].ubicacionManual || out[i].ubicacion === 'tapa') continue;
+      if (!info[i].apta || info[i].ext <= 0) continue;
+      if (info[i].ext > CAPACIDAD_TAPA_ML - tapa + EPS) continue; // no entra en la tapa
+      if (mejor === -1 || info[i].ext > info[mejor].ext) mejor = i;
+    }
+    if (mejor === -1) break; // no hay nada apto que quepa: queda el aviso de cuerpo excedido
+    out[mejor] = { ...out[mejor], ubicacion: 'tapa' };
+    cuerpo -= info[mejor].ext;
+    tapa += info[mejor].ext;
+  }
+  return out;
 }
 
 // ---------- Producto intermedio: pesadas teóricas ----------

@@ -59,9 +59,16 @@ export default function Admin({ catalogos, onCambio }: { catalogos: Catalogos; o
                   <td className="pr-2">{fmtPct(t.concentracion)}</td>
                   <td className="pr-2">{t.ip}</td>
                   <td className="pr-2">
-                    <span className={`badge ${t.ubicacion === 'tapa' ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                      {t.ubicacion}
+                    <span className={`badge ${t.ubicacion === 'tapa' ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700'}`}
+                      title={t.ubicacion === 'tapa' ? 'Puede ir a la tapa si el cuerpo supera 0.9 mL' : 'Siempre al cuerpo'}>
+                      {t.ubicacion === 'tapa' ? 'apta tapa' : 'cuerpo'}
                     </span>
+                    {t.convMgPorUnidad ? (
+                      <span className="ml-1 badge bg-violet-50 text-violet-700"
+                        title={`Conversión: 1 ${t.convUnidad} = ${t.convMgPorUnidad} mg de materia prima`}>
+                        {t.convUnidad}→mg
+                      </span>
+                    ) : null}
                   </td>
                   <td className="pr-2 font-mono text-xs">{t.poe || '—'}</td>
                   <td className="pr-2 text-xs text-slate-500">
@@ -93,6 +100,7 @@ export default function Admin({ catalogos, onCambio }: { catalogos: Catalogos; o
       {editando && (
         <TintaModal
           tinta={editando === 'nueva' ? null : editando}
+          excipientesCatalogo={catalogos.excipientes.map((e) => e.nombre)}
           onCerrar={() => setEditando(null)}
           onGuardado={() => { setEditando(null); onCambio(); }}
         />
@@ -108,10 +116,12 @@ const PARAMS_DEFAULT: ParametrosImpresion = {
 
 function TintaModal({
   tinta,
+  excipientesCatalogo,
   onCerrar,
   onGuardado,
 }: {
   tinta: Tinta | null;
+  excipientesCatalogo: string[];
   onCerrar: () => void;
   onGuardado: () => void;
 }) {
@@ -122,6 +132,8 @@ function TintaModal({
     ip: tinta?.ip ?? 1,
     aManopla: tinta?.aManopla ?? false,
     ubicacion: tinta?.ubicacion ?? 'cuerpo',
+    convUnidad: tinta?.convUnidad ?? '',
+    convMgPorUnidad: tinta?.convMgPorUnidad ?? null as number | null,
     excipientes: (tinta?.excipientes ?? []) as ExcipienteTinta[],
     parametros: (tinta?.parametros ?? PARAMS_DEFAULT) as ParametrosImpresion,
     alerta: tinta?.alerta ?? '',
@@ -147,6 +159,8 @@ function TintaModal({
       ip: t.ip,
       aManopla: t.aManopla,
       ubicacion: t.ubicacion,
+      convUnidad: t.convUnidad.trim(),
+      convMgPorUnidad: t.convMgPorUnidad && t.convMgPorUnidad > 0 ? t.convMgPorUnidad : null,
       excipientes: t.excipientes,
       parametros: t.parametros,
       alerta: t.alerta,
@@ -197,9 +211,13 @@ function TintaModal({
           <div>
             <label className="label">Ubicación en la cápsula</label>
             <select className="input" value={t.ubicacion} onChange={(e) => setT({ ...t, ubicacion: e.target.value })}>
-              <option value="cuerpo">Cuerpo (máx 0.9 mL)</option>
-              <option value="tapa">Tapa (máx 0.1 mL)</option>
+              <option value="cuerpo">Cuerpo siempre (ej. oleogel)</option>
+              <option value="tapa">Apta para tapa (PEG/CoQ10/Ideb.)</option>
             </select>
+            <p className="mt-1 text-[11px] text-slate-400">
+              &quot;Apta para tapa&quot; NO significa que va siempre a la tapa: la tapa
+              solo se usa cuando el cuerpo supera 0.9 mL.
+            </p>
           </div>
           <div className="flex items-end pb-2">
             <label className="flex items-center gap-2 text-sm">
@@ -216,6 +234,30 @@ function TintaModal({
             <input className="input" placeholder="ej: MALAXAR previamente antes de cargar en jeringa"
               value={t.alerta} onChange={(e) => setT({ ...t, alerta: e.target.value })} />
           </div>
+          <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+            <label className="label mb-2">Conversión de dosis (opcional) — si la receta viene en otra unidad</label>
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="w-32">
+                <label className="label">Unidad de receta</label>
+                <input className="input" list="dl-conv-unidades" placeholder="UI / µg"
+                  value={t.convUnidad} onChange={(e) => setT({ ...t, convUnidad: e.target.value })} />
+                <datalist id="dl-conv-unidades">
+                  <option value="UI" /><option value="µg" /><option value="ml" />
+                </datalist>
+              </div>
+              <div className="w-48">
+                <label className="label">mg de materia prima por unidad</label>
+                <input className="input" type="number" step="any" placeholder="ej: 0.5"
+                  value={t.convMgPorUnidad ?? ''}
+                  onChange={(e) => setT({ ...t, convMgPorUnidad: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <p className="min-w-48 flex-1 text-[11px] leading-snug text-slate-500">
+                Ej: levadura de selenio al 0,2% de Se → unidad <b>µg</b>, factor <b>0,5</b>
+                &nbsp;(100 µg de selenio = 50 mg de levadura). La dosis en mg se calcula sola
+                al mapear la receta.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Excipientes con fracciones exactas */}
@@ -226,17 +268,28 @@ function TintaModal({
               Σ {Math.round(sumaFracciones * 100)}% {fraccionesOk ? '✓' : '≠ 100%'}
             </span>
           </div>
+          {t.excipientes.length > 0 && (
+            <div className="mb-1 grid grid-cols-[minmax(0,1fr)_6.5rem_1.5rem] gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <span>Cuál excipiente es</span>
+              <span>% del total</span>
+              <span />
+            </div>
+          )}
           {t.excipientes.map((e, i) => (
-            <div key={i} className="mb-1.5 flex gap-2">
-              <input className="input flex-1" placeholder="Nombre (ej: PEG 4000)" value={e.nombre}
+            <div key={i} className="mb-1.5 grid grid-cols-[minmax(0,1fr)_6.5rem_1.5rem] items-center gap-2">
+              <input className="input" list="dl-excipientes-tinta" placeholder="Nombre (ej: PEG 4000)"
+                autoFocus={!e.nombre} value={e.nombre}
                 onChange={(ev) => setExc(i, { nombre: ev.target.value })} />
-              <input className="input w-24" type="number" step="any" placeholder="%"
+              <input className="input" type="number" step="any" placeholder="%"
                 value={Number((e.fraccion * 100).toFixed(3))}
                 onChange={(ev) => setExc(i, { fraccion: Number(ev.target.value) / 100 })} />
               <button className="text-red-500"
                 onClick={() => setT((p) => ({ ...p, excipientes: p.excipientes.filter((_, j) => j !== i) }))}>✕</button>
             </div>
           ))}
+          <datalist id="dl-excipientes-tinta">
+            {excipientesCatalogo.map((n) => <option key={n} value={n} />)}
+          </datalist>
           <button className="btn-ghost text-xs"
             onClick={() => setT((p) => ({ ...p, excipientes: [...p.excipientes, { nombre: '', fraccion: 0 }] }))}>
             + Agregar excipiente

@@ -32,6 +32,8 @@ async function main() {
       ip: t.ip,
       aManopla: t.aManopla,
       ubicacion: t.ubicacion,
+      convUnidad: t.convUnidad ?? '',
+      convMgPorUnidad: t.convMgPorUnidad ?? null,
       excipientes: t.excipientes,
       parametros: t.parametros,
       alerta: t.alerta,

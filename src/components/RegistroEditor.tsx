@@ -6,7 +6,8 @@ import { dosisPorCapsula, capsulasSugeridas, sumarMeses, hoyISO } from '@/lib/ut
 import { MESES_VENCIMIENTO } from '@/lib/config';
 import { faltantes } from '@/lib/validation';
 import {
-  calcularCapsula, tintasParaActivo, capaDesdeTinta, extrusionCapa, aMg, fmtMl, fmtPct,
+  calcularCapsula, tintasParaActivo, capaDesdeTinta, extrusionCapa,
+  autoUbicarCapas, dosisEnMgParaTinta, normUnidad, fmtMl, fmtPct,
 } from '@/lib/engine';
 import ResultadosPanel from './ResultadosPanel';
 
@@ -18,11 +19,13 @@ export default function RegistroEditor({
   catalogos,
   colorPaciente,
   onCambio,
+  onActualizado,
 }: {
   registro: Registro;
   catalogos: Catalogos;
   colorPaciente: Color;
   onCambio: () => void;
+  onActualizado: (r: Registro) => void;
 }) {
   // ---------------- Estado + persistencia híbrida (local + nube) ----------------
   const [r, setR] = useState<Registro>(() => {
@@ -40,6 +43,8 @@ export default function RegistroEditor({
   const [sync, setSync] = useState<'ok' | 'guardando' | 'pendiente'>('ok');
   const [errores, setErrores] = useState<string[] | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+  const rRef = useRef(r);
+  rRef.current = r;
 
   const sincronizar = useCallback(async (data: Registro) => {
     setSync('guardando');
@@ -59,15 +64,20 @@ export default function RegistroEditor({
 
   const set = useCallback(
     (patch: Partial<Registro>) => {
-      setR((prev) => {
-        const next = { ...prev, ...patch, updatedAt: new Date() } as Registro;
+      const next = { ...rRef.current, ...patch, updatedAt: new Date() } as Registro;
+      rRef.current = next;
+      setR(next);
+      try {
         localStorage.setItem(DRAFT_KEY(next.id), JSON.stringify(next));
-        clearTimeout(timer.current);
-        timer.current = setTimeout(() => sincronizar(next), 700);
-        return next;
-      });
+      } catch {}
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => sincronizar(next), 700);
+      // Actualiza la lista en memoria del padre: al cambiar de paciente o
+      // de solapa y volver, la tarjeta se re-monta con estos datos y no
+      // con los de la carga inicial de la página.
+      onActualizado(next);
     },
-    [sincronizar]
+    [sincronizar, onActualizado]
   );
 
   useEffect(() => {
@@ -85,13 +95,16 @@ export default function RegistroEditor({
     [r.capas, r.capsulasPorTomaManual, r.capsulasPorToma]
   );
 
-  // Aplica cambios en capas recalculando división, extrusiones y cápsulas totales
+  // Aplica cambios en capas recalculando división, ubicación cuerpo/tapa,
+  // extrusiones y cápsulas totales
   const actualizarCapas = useCallback(
     (capas: CapaTinta[], extras: Partial<Registro> = {}) => {
       const manual = (extras.capsulasPorTomaManual ?? r.capsulasPorTomaManual) as boolean;
       const forzado = (extras.capsulasPorToma ?? r.capsulasPorToma) as number;
       const res = calcularCapsula(capas, { manual, capsulasPorToma: forzado });
-      const capasFinal = capas.map((c) => ({
+      // La tapa solo se usa si el cuerpo supera 0.9 mL (tintas aptas, PEG).
+      const capasUbicadas = autoUbicarCapas(capas, res.capsulasPorToma, catalogos.tintas);
+      const capasFinal = capasUbicadas.map((c) => ({
         ...c,
         extrusionMl: extrusionCapa(c.dosisMg, c.concentracion, c.ip, res.capsulasPorToma),
       }));
@@ -104,7 +117,7 @@ export default function RegistroEditor({
         aprobadas: sug ?? r.aprobadas,
       });
     },
-    [r, set]
+    [r, set, catalogos.tintas]
   );
 
   const setCapa = (i: number, patch: Partial<CapaTinta>) =>
@@ -130,9 +143,16 @@ export default function RegistroEditor({
       alert(`"${t.nombre}" ya está en otra capa. No se permiten productos intermedios duplicados.`);
       return;
     }
+    // Si la tinta tiene factor de conversión para la unidad de la receta
+    // (ej. selenio en µg, vit D en UI), la dosis en mg se recalcula.
+    const capa = r.capas[i];
+    const conv = dosisEnMgParaTinta(capa.dosisOriginal, capa.unidadOriginal, t);
     setCapa(i, {
       tintaId: t.id, tinta: t.nombre, concentracion: t.concentracion, ip: t.ip,
-      ubicacion: t.ubicacion, poe: t.poe, alerta: t.alerta, aManopla: t.aManopla,
+      poe: t.poe, alerta: t.alerta, aManopla: t.aManopla,
+      // La ubicación vuelve a decidirse sola (cuerpo salvo cuerpo > 0.9 mL)
+      ubicacion: 'cuerpo', ubicacionManual: false, aptaTapa: t.ubicacion === 'tapa',
+      ...(conv.convertida ? { dosisMg: conv.mg } : {}),
     });
   };
 
@@ -297,7 +317,16 @@ export default function RegistroEditor({
           <div className="space-y-2">
             {r.capas.map((c, i) => {
               const calc = resultado.capas[i];
-              const opciones = tintasParaActivo(c.activoReceta, c.dosisMg, catalogos.tintas);
+              // Para sugerir tintas se usa la dosis ORIGINAL de la receta
+              // (cada tinta convierte con su propio factor). Si la capa no
+              // tiene dosis original (cargada a mano), se usa dosisMg como mg.
+              const opciones = c.dosisOriginal != null
+                ? tintasParaActivo(c.activoReceta, c.dosisOriginal, c.unidadOriginal, catalogos.tintas)
+                : tintasParaActivo(c.activoReceta, c.dosisMg, 'mg', catalogos.tintas);
+              const tintaSel = c.tintaId ? catalogos.tintas.find((t) => t.id === c.tintaId) : null;
+              const convAplicada =
+                c.dosisOriginal != null && tintaSel != null &&
+                dosisEnMgParaTinta(c.dosisOriginal, c.unidadOriginal, tintaSel).convertida;
               const sugeridasIds = new Set(opciones.map((o) => o.tinta.id));
               return (
                 <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
@@ -352,9 +381,19 @@ export default function RegistroEditor({
                     <input className="input mt-2" placeholder="Nombre de la tinta (manual)" value={c.tinta}
                       onChange={(e) => setCapa(i, { tinta: e.target.value })} />
                   )}
-                  {c.unidadOriginal && !['mg', 'µg', 'g'].includes(c.unidadOriginal) && (
+                  {convAplicada && (
+                    <p className="mt-1 text-[11px] font-medium text-teal-700">
+                      ✓ Convertido por la tinta: {c.dosisOriginal} {c.unidadOriginal} ×{' '}
+                      {tintaSel?.convMgPorUnidad} mg/{tintaSel?.convUnidad} ={' '}
+                      <b>{c.dosisMg != null ? Number(c.dosisMg.toFixed(4)) : '—'} mg de materia prima</b>
+                    </p>
+                  )}
+                  {!convAplicada && c.unidadOriginal &&
+                    !['mg', 'µg', 'g'].includes(normUnidad(c.unidadOriginal)) && (
                     <p className="mt-1 text-[11px] font-medium text-amber-600">
-                      ⚠ receta en {c.unidadOriginal}: convertir a mg según la tinta
+                      ⚠ receta en {c.unidadOriginal}: la tinta elegida no tiene factor de
+                      conversión — cargalo en Gestión (editar tinta → Conversión de dosis)
+                      o convertí a mg a mano
                     </p>
                   )}
 
@@ -380,10 +419,20 @@ export default function RegistroEditor({
                         {fmtMl(calc?.extrusion)}
                       </p>
                     </div>
-                    <div className="w-28">
-                      <label className="label">Ubicación</label>
+                    <div className="w-36">
+                      <label className="label">
+                        Ubicación{' '}
+                        {c.ubicacionManual ? (
+                          <button className="font-bold text-teal-700 hover:underline" title="Volver a ubicación automática (tapa solo si el cuerpo supera 0.9 mL)"
+                            onClick={() => setCapa(i, { ubicacionManual: false })}>
+                            (fijada · ↺ auto)
+                          </button>
+                        ) : (
+                          <span className="normal-case text-slate-400">(auto)</span>
+                        )}
+                      </label>
                       <select className="input" value={c.ubicacion}
-                        onChange={(e) => setCapa(i, { ubicacion: e.target.value })}>
+                        onChange={(e) => setCapa(i, { ubicacion: e.target.value, ubicacionManual: true })}>
                         <option value="cuerpo">Cuerpo</option>
                         <option value="tapa">Tapa</option>
                       </select>

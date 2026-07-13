@@ -59,6 +59,16 @@ export default function Home() {
     };
   }, [recargar]);
 
+  // Mantiene la lista en memoria al día con cada edición del editor:
+  // sin esto, al cambiar de paciente/solapa la tarjeta se re-monta con
+  // datos viejos y los cambios "desaparecen" hasta recargar la página.
+  const actualizarRegistro = useCallback((reg: Registro) => {
+    setRegistros((prev) => prev.map((x) => (x.id === reg.id ? reg : x)));
+  }, []);
+  const actualizarRegistroPi = useCallback((reg: RegistroPi) => {
+    setRegistrosPi((prev) => prev.map((x) => (x.id === reg.id ? reg : x)));
+  }, []);
+
   const ptProceso = registros.filter((r) => r.estado === 'en_proceso');
   const piProceso = registrosPi.filter((r) => r.estado === 'en_proceso');
   const ptTerm = registros.filter((r) => r.estado === 'terminado');
@@ -109,10 +119,12 @@ export default function Home() {
         <LectorRecetas catalogos={catalogos} onCreados={() => { recargar(); setTab('pt'); }} />
       )}
       {tab === 'pt' && catalogos && (
-        <EnProceso registros={ptProceso} catalogos={catalogos} onCambio={recargar} />
+        <EnProceso registros={ptProceso} catalogos={catalogos} onCambio={recargar}
+          onActualizado={actualizarRegistro} />
       )}
       {tab === 'pi' && catalogos && (
-        <ProductoIntermedio registros={piProceso} catalogos={catalogos} onCambio={recargar} />
+        <ProductoIntermedio registros={piProceso} catalogos={catalogos} onCambio={recargar}
+          onActualizado={actualizarRegistroPi} />
       )}
       {tab === 'terminados' && (
         <Terminados registros={ptTerm} registrosPi={piTerm} onCambio={recargar} />

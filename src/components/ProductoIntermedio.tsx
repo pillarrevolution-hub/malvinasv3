@@ -13,10 +13,12 @@ export default function ProductoIntermedio({
   registros,
   catalogos,
   onCambio,
+  onActualizado,
 }: {
   registros: RegistroPi[];
   catalogos: Catalogos;
   onCambio: () => void;
+  onActualizado: (r: RegistroPi) => void;
 }) {
   const [abiertos, setAbiertos] = useState<Record<number, boolean>>({});
   const [tintaNueva, setTintaNueva] = useState('');
@@ -102,7 +104,7 @@ export default function ProductoIntermedio({
                     <span className="text-2xl">{abierto ? '▾' : '▸'}</span>
                   </div>
                 </button>
-                {abierto && <PiEditor registro={r} catalogos={catalogos} onCambio={onCambio} />}
+                {abierto && <PiEditor registro={r} catalogos={catalogos} onCambio={onCambio} onActualizado={onActualizado} />}
               </div>
             );
           })}
@@ -117,10 +119,12 @@ function PiEditor({
   registro,
   catalogos,
   onCambio,
+  onActualizado,
 }: {
   registro: RegistroPi;
   catalogos: Catalogos;
   onCambio: () => void;
+  onActualizado: (r: RegistroPi) => void;
 }) {
   const [r, setR] = useState<RegistroPi>(() => {
     if (typeof window !== 'undefined') {
@@ -137,6 +141,8 @@ function PiEditor({
   const [sync, setSync] = useState<'ok' | 'guardando' | 'pendiente'>('ok');
   const [errores, setErrores] = useState<string[] | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+  const rRef = useRef(r);
+  rRef.current = r;
 
   const sincronizar = useCallback(async (data: RegistroPi) => {
     setSync('guardando');
@@ -156,15 +162,19 @@ function PiEditor({
 
   const set = useCallback(
     (patch: Partial<RegistroPi>) => {
-      setR((prev) => {
-        const next = { ...prev, ...patch, updatedAt: new Date() } as RegistroPi;
+      const next = { ...rRef.current, ...patch, updatedAt: new Date() } as RegistroPi;
+      rRef.current = next;
+      setR(next);
+      try {
         localStorage.setItem(DRAFT_KEY(next.id), JSON.stringify(next));
-        clearTimeout(timer.current);
-        timer.current = setTimeout(() => sincronizar(next), 700);
-        return next;
-      });
+      } catch {}
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => sincronizar(next), 700);
+      // Mantiene la lista del padre al día: al colapsar y reabrir el lote
+      // no se pierden los cambios en pantalla.
+      onActualizado(next);
     },
-    [sincronizar]
+    [sincronizar, onActualizado]
   );
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import type { Catalogos } from '@/app/page';
 import { colorDeGrupo } from '@/lib/colors';
 import { hoyISO, sumarMeses, capsulasSugeridas } from '@/lib/utils';
 import { MESES_VENCIMIENTO } from '@/lib/config';
-import { aMg, tintasParaActivo, capaDesdeTinta, calcularCapsula, extrusionCapa } from '@/lib/engine';
+import { tintasParaActivo, capaDesdeTinta, calcularCapsula, extrusionCapa, autoUbicarCapas } from '@/lib/engine';
 
 export default function LectorRecetas({
   catalogos,
@@ -20,6 +20,18 @@ export default function LectorRecetas({
   const [receta, setReceta] = useState<RecetaParseada | null>(null);
   const [seleccion, setSeleccion] = useState<boolean[]>([]);
   const [error, setError] = useState('');
+  const [arrastrando, setArrastrando] = useState(false);
+
+  function procesarArchivo(file: File | undefined | null) {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setError('El archivo tiene que ser un PDF. Para recetas por foto usá "Pegar texto".');
+      return;
+    }
+    const form = new FormData();
+    form.append('file', file);
+    procesar(form);
+  }
 
   async function procesar(body: FormData | string) {
     setCargando(true);
@@ -54,16 +66,18 @@ export default function LectorRecetas({
       .filter((_, i) => seleccion[i])
       .map((f) => {
         // Capas: una por activo, con la tinta sugerida automáticamente
-        // (criterio: imprimible ≥0.03 mL y de menor volumen)
+        // (criterio: imprimible ≥0.03 mL y de menor volumen). La dosis se
+        // convierte por tinta (UI, µg de elemento → mg de materia prima).
         const capas = f.activos.map((a, i) => {
-          const dosisMg = aMg(a.dosis, a.unidad);
-          const opciones = tintasParaActivo(a.activo, dosisMg, catalogos.tintas);
+          const opciones = tintasParaActivo(a.activo, a.dosis, a.unidad, catalogos.tintas);
           const mejor = opciones[0]?.tinta ?? null;
-          return capaDesdeTinta(i + 1, a.activo, dosisMg, a.unidad, mejor);
+          return capaDesdeTinta(i + 1, a.activo, a.dosis, a.unidad, mejor);
         });
         // División automática de cápsulas por toma
         const res = calcularCapsula(capas, { manual: false, capsulasPorToma: 1 });
-        const capasConExtrusion = capas.map((c) => ({
+        // Ubicación cuerpo/tapa: la tapa solo se usa si el cuerpo supera 0.9 mL
+        const capasUbicadas = autoUbicarCapas(capas, res.capsulasPorToma, catalogos.tintas);
+        const capasConExtrusion = capasUbicadas.map((c) => ({
           ...c,
           extrusionMl: extrusionCapa(c.dosisMg, c.concentracion, c.ip, res.capsulasPorToma),
         }));
@@ -126,19 +140,43 @@ export default function LectorRecetas({
         </div>
 
         {modo === 'pdf' ? (
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-10 text-center hover:border-teal-600">
+          <label
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
+              arrastrando
+                ? 'border-teal-600 bg-teal-50'
+                : 'border-slate-300 bg-slate-50 hover:border-teal-600'
+            }`}
+            onDragOver={(e) => {
+              // Sin preventDefault el navegador no permite soltar (abre el PDF)
+              e.preventDefault();
+              e.stopPropagation();
+              setArrastrando(true);
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setArrastrando(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setArrastrando(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setArrastrando(false);
+              procesarArchivo(e.dataTransfer.files?.[0]);
+            }}>
             <span className="text-3xl">📄</span>
-            <span className="mt-2 font-semibold">Elegí o arrastrá el PDF de la receta</span>
+            <span className="mt-2 font-semibold">
+              {arrastrando ? 'Soltá el PDF acá' : 'Elegí o arrastrá el PDF de la receta'}
+            </span>
             <span className="text-sm text-slate-500">
               Se procesa en memoria: no se guarda ninguna imagen ni archivo.
             </span>
             <input type="file" accept="application/pdf" className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                const form = new FormData();
-                form.append('file', file);
-                procesar(form);
+                procesarArchivo(e.target.files?.[0]);
+                e.target.value = ''; // permite volver a subir el mismo archivo
               }} />
           </label>
         ) : (
@@ -187,8 +225,7 @@ export default function LectorRecetas({
               {receta.formulas.map((f, i) => {
                 // Vista previa de mapeo de tintas
                 const preview = f.activos.map((a) => {
-                  const mg = aMg(a.dosis, a.unidad);
-                  const op = tintasParaActivo(a.activo, mg, catalogos.tintas)[0];
+                  const op = tintasParaActivo(a.activo, a.dosis, a.unidad, catalogos.tintas)[0];
                   return { a, tinta: op?.tinta.nombre ?? null };
                 });
                 return (

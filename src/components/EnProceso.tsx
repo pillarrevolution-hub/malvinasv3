@@ -16,10 +16,12 @@ export default function EnProceso({
   registros,
   catalogos,
   onCambio,
+  onActualizado,
 }: {
   registros: Registro[];
   catalogos: Catalogos;
   onCambio: () => void;
+  onActualizado: (r: Registro) => void;
 }) {
   const [abiertoId, setAbiertoId] = useState<number | null>(null);
 
@@ -78,6 +80,7 @@ export default function EnProceso({
             catalogos={catalogos}
             colorPaciente={color}
             onCambio={onCambio}
+            onActualizado={onActualizado}
           />
         </div>
       </div>

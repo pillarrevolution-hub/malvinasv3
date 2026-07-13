@@ -1,0 +1,95 @@
+// Test del motor v2.0.3: ubicación automática cuerpo/tapa y conversión
+// de dosis por tinta. Correr con: npx tsx scripts/test-engine.ts
+import type { Tinta } from '../src/db/schema';
+import {
+  autoUbicarCapas, capaDesdeTinta, dosisEnMgParaTinta, tintasParaActivo,
+  calcularCapsula,
+} from '../src/lib/engine';
+
+let fallas = 0;
+function check(nombre: string, cond: boolean, detalle = '') {
+  console.log(`${cond ? '✔' : '✘'} ${nombre}${detalle ? ` — ${detalle}` : ''}`);
+  if (!cond) fallas++;
+}
+const BASE: Tinta = {
+  id: 1, nombre: 'X', keywords: '', concentracion: 0.5, ip: 1, aManopla: false,
+  ubicacion: 'cuerpo', convUnidad: '', convMgPorUnidad: null,
+  excipientes: [], parametros: null, alerta: '', poe: '', activo: true,
+} as Tinta;
+const T = (p: Partial<Tinta>): Tinta => ({ ...BASE, ...p });
+
+// ---------- Conversión ----------
+const levSelenio = T({ id: 10, nombre: 'Lev. Selenio 50%', keywords: 'selenio, levadura de selenio',
+  concentracion: 0.5, ip: 1.028, convUnidad: 'µg', convMgPorUnidad: 0.5, ubicacion: 'cuerpo' });
+
+const c1 = dosisEnMgParaTinta(100, 'µg', levSelenio);
+check('Selenio: 100 µg → 50 mg de levadura', c1.convertida && Math.abs((c1.mg ?? 0) - 50) < 1e-9, `mg=${c1.mg}`);
+
+const c2 = dosisEnMgParaTinta(100, 'mcg', levSelenio); // unidad escrita distinto
+check('Selenio: "mcg" normaliza igual que µg', c2.convertida && c2.mg === 50);
+
+const sinConv = T({ id: 11, nombre: 'Vit D (impura) 13%', concentracion: 0.13, ip: 0.9 });
+const c3 = dosisEnMgParaTinta(2000, 'UI', sinConv);
+check('UI sin factor → null (aviso ámbar)', !c3.convertida && c3.mg === null);
+
+const c4 = dosisEnMgParaTinta(0.25, 'g', sinConv);
+check('Masa normal sigue igual: 0.25 g → 250 mg', c4.mg === 250 && !c4.convertida);
+
+// tintasParaActivo con conversión: extrusión = (50/0.5)/1000/1.028
+const ops = tintasParaActivo('Selenio', 100, 'µg', [levSelenio]);
+const extEsp = 50 / 0.5 / 1000 / 1.028;
+check('Sugerencia usa dosis convertida', ops.length === 1 && Math.abs((ops[0].extrusion ?? 0) - extEsp) < 1e-9,
+  `ext=${ops[0]?.extrusion?.toFixed(4)} esp=${extEsp.toFixed(4)}`);
+check('Sugerencia imprimible (≥0.03)', ops[0].imprimible);
+
+// ---------- capaDesdeTinta: siempre arranca en cuerpo ----------
+const melatonina = T({ id: 20, nombre: 'Melatonina (salvavidas) 20%', concentracion: 0.2, ip: 0.909, ubicacion: 'tapa' });
+const capaMel = capaDesdeTinta(1, 'Melatonina', 12, 'mg', melatonina);
+check('Capa nueva de tinta PEG arranca en CUERPO', capaMel.ubicacion === 'cuerpo' && capaMel.aptaTapa === true);
+check('Capa guarda dosis original', capaMel.dosisOriginal === 12 && capaMel.dosisMg === 12);
+
+// ---------- autoUbicarCapas ----------
+const ogap = T({ id: 30, nombre: 'OGAP 97%', concentracion: 0.97, ip: 0.9, ubicacion: 'cuerpo' });
+const catalogo = [levSelenio, sinConv, melatonina, ogap];
+
+// Caso melatonina sola 12 mg al 20%: 0.066 mL — cuerpo no se pasa → todo al cuerpo
+const soloMel = autoUbicarCapas([capaMel], 1, catalogo);
+check('Cuerpo ≤ 0.9: NADA va a la tapa', soloMel[0].ubicacion === 'cuerpo');
+
+// Caso cuerpo excedido: OGAP grande (0.88 mL) + melatonina PEG chica (0.066 mL) = 0.946
+const capaOgap = capaDesdeTinta(1, 'OGAP', 768, 'mg', ogap); // 768/0.97/1000/0.9 = 0.8797 mL
+const capaMel2 = capaDesdeTinta(2, 'Melatonina', 12, 'mg', melatonina); // 0.066 mL
+const ubicadas = autoUbicarCapas([capaOgap, capaMel2], 1, catalogo);
+check('Cuerpo > 0.9: la capa PEG pasa a la tapa', ubicadas[0].ubicacion === 'cuerpo' && ubicadas[1].ubicacion === 'tapa');
+const res = calcularCapsula(ubicadas, { manual: false, capsulasPorToma: 1 });
+check('Con la capa en la tapa el cuerpo ya no excede', !res.excedeCuerpo && !res.excedeTapa,
+  `cuerpo=${res.volumenCuerpo.toFixed(3)} tapa=${res.volumenTapa.toFixed(3)}`);
+
+// La capa PEG NO entra en la tapa (>0.1 mL) → queda en el cuerpo con aviso
+const capaMelGrande = capaDesdeTinta(2, 'Melatonina', 30, 'mg', melatonina); // 0.165 mL
+const ub2 = autoUbicarCapas([capaOgap, capaMelGrande], 1, catalogo);
+check('Capa PEG que no entra en la tapa (>0.1) queda en cuerpo', ub2[1].ubicacion === 'cuerpo');
+
+// Ubicación fijada a mano se respeta
+const fijada = { ...capaMel2, ubicacion: 'tapa', ubicacionManual: true };
+const ub3 = autoUbicarCapas([fijada], 1, catalogo);
+check('Ubicación manual se respeta aunque el cuerpo no exceda', ub3[0].ubicacion === 'tapa');
+
+// Capa vieja sin aptaTapa: se deriva del catálogo por tintaId
+const vieja: any = { ...capaMel2 };
+delete vieja.aptaTapa;
+delete vieja.ubicacionManual;
+vieja.ubicacion = 'tapa'; // como quedó guardada por el bug
+const ub4 = autoUbicarCapas([vieja], 1, catalogo);
+check('Capa vieja (guardada en tapa por el bug) vuelve al cuerpo', ub4[0].ubicacion === 'cuerpo' && ub4[0].aptaTapa === true);
+
+// Regresión: caso OGAP+VitC de MALVINAS (0.949 mL, 99.9%)
+const vitc = T({ id: 40, nombre: 'Vit C 50%', concentracion: 0.5, ip: 1.06, ubicacion: 'cuerpo' });
+const cOgap = capaDesdeTinta(1, 'OGAP', 610, 'mg', ogap);
+const cVitc = capaDesdeTinta(2, 'Vit C', 130, 'mg', vitc);
+const r2 = calcularCapsula(autoUbicarCapas([cOgap, cVitc], 1, [ogap, vitc]), { manual: false, capsulasPorToma: 1 });
+check('Regresión motor: OGAP 610 + VitC 130 ≈ 0.944 mL, 1 cápsula', Math.abs(r2.volumenTotal - 0.9438) < 0.001 && r2.capsulasPorToma === 1,
+  `vol=${r2.volumenTotal.toFixed(4)}`);
+
+console.log(fallas === 0 ? '\n✅ TODOS LOS TESTS PASAN' : `\n❌ ${fallas} tests fallaron`);
+process.exit(fallas === 0 ? 0 : 1);

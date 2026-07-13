@@ -22,7 +22,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Acetazolamida 40%",
@@ -51,7 +53,9 @@
       "pausaBal": 1.5
     },
     "alerta": "Respetar estricto orden de adición de solventes: incorporar el propilenglicol como primer agente humectante de la formulación.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Acetazolamida 20%",
@@ -80,7 +84,9 @@
       "pausaBal": 1.5
     },
     "alerta": "Respetar estricto orden de adición de solventes: incorporar el propilenglicol como primer agente humectante de la formulación.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Amitriptilina 3%",
@@ -109,7 +115,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Ashwaganda 50%",
@@ -134,7 +142,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Ashwaganda salvavidas 60%",
@@ -151,7 +161,9 @@
     ],
     "parametros": null,
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "B12 1.1%",
@@ -180,7 +192,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "B12 (concentrada) 5.45%",
@@ -209,7 +223,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "B12 (diluida) 0.23%",
@@ -238,7 +254,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "B6 Piridoxina 35%",
@@ -267,7 +285,9 @@
       "pausaBal": 1.5
     },
     "alerta": "PRECAUCIÓN: Incorporar el agua destilada exclusivamente después de la dispersión completa de la piridoxina para evitar un aumento abrupto de viscosidad y la gelificación indeseada de la matriz.",
-    "poe": "FPI.01.PI019"
+    "poe": "FPI.01.PI019",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "B9 acido folico 0.43%",
@@ -296,7 +316,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Bisglicinato de hierro 55%",
@@ -321,7 +343,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Carbonato de Calcio 60%",
@@ -346,7 +370,9 @@
       "pausaBal": 1.5
     },
     "alerta": "Riesgo de solidificación prematura en boquilla. Monitorear de forma estricta el flujo de extrusión continuo.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Citrato de Calcio 50%",
@@ -371,7 +397,9 @@
       "pausaBal": 1.5
     },
     "alerta": "Alta tendencia a la solidificación prematura y aglomeración en boquilla. Configurar retracción en 0.1 y realizar un purgado amplio (descarte) antes de iniciar la impresión.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Citrato de Calcio (Salvavidas) 55%",
@@ -388,7 +416,9 @@
     ],
     "parametros": null,
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Citrato de magnesio 50%",
@@ -413,7 +443,9 @@
       "pausaBal": 1.5
     },
     "alerta": "Inestabilidad física en reposo (separación de fases). Requiere agitación mecánica vigorosa para su completa homogeneización inmediatamente previa a la fase de extrusión.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Cloruro de Potasio 60%",
@@ -438,7 +470,9 @@
       "pausaBal": 1.5
     },
     "alerta": "PRECAUCIÓN: Procesar y extruir estrictamente a temperatura ambiente (25°C). Riesgo elevado de precipitación rápida del principio activo en la matriz lipídica frente a estrés térmico.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vitamina D (impura) 13%",
@@ -463,7 +497,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": "FPI.01.PI007"
+    "poe": "FPI.01.PI007",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "DHEA 30%",
@@ -492,7 +528,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Dutasteride 0.2%",
@@ -521,7 +559,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Dutasteride 0.4%",
@@ -550,7 +590,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "GABA 50%",
@@ -575,7 +617,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Ginkgo biloba 50%",
@@ -600,7 +644,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Ginseng 50%",
@@ -625,7 +671,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Ginseng salvavidas 60%",
@@ -642,7 +690,9 @@
     ],
     "parametros": null,
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Glicinato de magnesio 55%",
@@ -667,7 +717,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": "FPI.01.PI003"
+    "poe": "FPI.01.PI003",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Hidrocortisona 1%",
@@ -692,7 +744,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Hidroxi Triptofano en Aerosil 40%",
@@ -717,7 +771,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Hierro quelado 60%",
@@ -742,7 +798,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "L Teanina 40%",
@@ -767,7 +825,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "L Teanina (salvavidas) 45%",
@@ -784,7 +844,9 @@
     ],
     "parametros": null,
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "L-cistina 50%",
@@ -809,7 +871,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": "FPI.01.PI043"
+    "poe": "FPI.01.PI043",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "L-Metionina salvavidas 50%",
@@ -826,7 +890,9 @@
     ],
     "parametros": null,
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Lavanda 96%",
@@ -851,7 +917,9 @@
       "pausaBal": 1.5
     },
     "alerta": "Formular a temperatura ambiente bajo agitación magnética continua. Calentar a 70°C únicamente para la fase de impresión.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Lev. Selenio 50%",
@@ -876,7 +944,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": "FPI.01.PI040"
+    "poe": "FPI.01.PI040",
+    "convUnidad": "µg",
+    "convMgPorUnidad": 0.5
   },
   {
     "nombre": "Manganeso Quelado 40%",
@@ -901,7 +971,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Melatonina 15%",
@@ -926,7 +998,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Melatonina (salvavidas) 20%",
@@ -951,7 +1025,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Melatonina para 2 mg 6.67%",
@@ -976,7 +1052,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Minoxidil 1%",
@@ -1005,7 +1083,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Minoxidil 4%",
@@ -1034,7 +1114,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Minoxidil 8%",
@@ -1063,7 +1145,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Oleogel 2.5%",
@@ -1088,7 +1172,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": "FPI.01.PI004"
+    "poe": "FPI.01.PI004",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Oleogel 5%",
@@ -1113,7 +1199,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Pantotenato de calcio 60%",
@@ -1138,7 +1226,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Progesterona 25%",
@@ -1167,7 +1257,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Resveratrol 45%",
@@ -1192,7 +1284,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Resveratrol Salvavidas 50%",
@@ -1209,7 +1303,9 @@
     ],
     "parametros": null,
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Riboflavina 40%",
@@ -1234,7 +1330,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Sulf. de Zn 20%",
@@ -1259,7 +1357,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Tadalafilo 4.54%",
@@ -1288,7 +1388,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Tiamina 40%",
@@ -1313,7 +1415,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Tiamina 36%",
@@ -1338,7 +1442,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Triptofano 30%",
@@ -1355,7 +1461,9 @@
     ],
     "parametros": null,
     "alerta": "Inestabilidad reológica durante la extrusión que compromete la uniformidad del lote. Se indica preparación estrictamente manual.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vit A 15%",
@@ -1380,7 +1488,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vit A 1.7%",
@@ -1405,7 +1515,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vit E 47.5%",
@@ -1430,7 +1542,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vitamina B9 acido folico 1.33%",
@@ -1459,7 +1573,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vitamina k2 0.15%",
@@ -1488,7 +1604,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": "FPI.01.PI030"
+    "poe": "FPI.01.PI030",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Coenzima Q10 100%",
@@ -1513,7 +1631,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Idebenona 100%",
@@ -1538,7 +1658,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "PEG 4000 puro",
@@ -1558,7 +1680,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Melatonina para 1 mg 3%",
@@ -1583,7 +1707,9 @@
       "pausaBal": 1.5
     },
     "alerta": "",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Vit C 50%",
@@ -1608,7 +1734,9 @@
       "pausaBal": 1.5
     },
     "alerta": "MALAXAR previamente la vitamina C antes de cargar en jeringa.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   },
   {
     "nombre": "Amitriptilina 6%",
@@ -1637,6 +1765,8 @@
       "pausaBal": 1.5
     },
     "alerta": "3% solubilizada en agua y luego PEG 4000. Del excipiente total, 20% es agua destilada.",
-    "poe": ""
+    "poe": "",
+    "convUnidad": "",
+    "convMgPorUnidad": null
   }
 ]

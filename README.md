@@ -1,4 +1,14 @@
 # M.A.L.V.I.N.A.S 2.0 — Nueva Farmacia Badra (PILL.AR)
+## v2.0.3 (13-jul-2026) — correcciones de producción
+
+1. **Los cambios ya no desaparecen al cambiar de paciente o de solapa**: cada edición actualiza también la lista en memoria de la app (antes solo iba a la base y la pantalla volvía a mostrar datos viejos hasta recargar).
+2. **La tapa solo se llena si el cuerpo supera 0.9 mL**: las tintas marcadas "apta para tapa" (PEG, CoQ10, Idebenona) arrancan en el cuerpo y pasan a la tapa automáticamente solo cuando el cuerpo se excede. La ubicación se puede fijar a mano por capa (botón "↺ auto" para volver al automático).
+3. **Gestión de tintas → excipientes**: el campo del nombre del excipiente volvió a ser usable (bug de CSS que lo colapsaba a un cuadradito), con encabezados "Cuál excipiente es / % del total" y sugerencias.
+4. **Arrastrar el PDF de la receta al lector ya funciona** (además del click).
+5. **Conversión de dosis por tinta**: cada tinta puede definir "unidad de receta" + "mg de materia prima por unidad" (Gestión → editar tinta). Levadura de selenio ya viene configurada (100 µg Se → 50 mg de levadura). Para Vitamina D en UI, cargar el factor cuando tengan la potencia de la materia prima.
+
+**Antes de deployar esta versión: correr `migration-v2.0.3.sql` en el SQL Editor de Neon (una sola vez).**
+
 
 Fusión de MALVINAS (motor de cálculo de extrusiones por IP) con el sistema de
 registro de lotes: lectura de recetas, cálculo automático de extrusiones por
