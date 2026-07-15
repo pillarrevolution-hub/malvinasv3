@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { Registro } from '@/db/schema';
 import type { Catalogos } from '@/app/page';
 import { colorDeGrupo } from '@/lib/colors';
-import { coincideFiltro, formatoLote } from '@/lib/utils';
+import { coincideFiltro, diasHasta, fechaAR, formatoLote } from '@/lib/utils';
 import RegistroEditor from './RegistroEditor';
 
 // =====================================================================
@@ -17,14 +17,33 @@ export default function EnProceso({
   catalogos,
   onCambio,
   onActualizado,
+  enProduccion,
 }: {
   registros: Registro[];
   catalogos: Catalogos;
   onCambio: () => void;
   onActualizado: (r: Registro) => void;
+  enProduccion: boolean;
 }) {
   const [abiertoId, setAbiertoId] = useState<number | null>(null);
   const [filtro, setFiltro] = useState('');
+
+  // Pasa el registro a la otra solapa (Pendientes ↔ En producción)
+  async function mover(r: Registro) {
+    const next = { ...r, enProduccion: !r.enProduccion, updatedAt: new Date() } as Registro;
+    onActualizado(next); // cambio de solapa instantáneo
+    try {
+      const res = await fetch(`/api/registros/${r.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(next),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      onActualizado(r); // revertir si falló
+      alert('No se pudo mover el registro. Revisá la conexión.');
+    }
+  }
 
   const visibles = registros.filter((r) =>
     coincideFiltro(
@@ -102,16 +121,25 @@ export default function EnProceso({
     <div className="space-y-3">
       <input className="input max-w-md" placeholder="🔍 Buscar por paciente, médico, lote, activo…"
         value={filtro} onChange={(e) => setFiltro(e.target.value)} />
-      {visibles.length === 0 && (
+      {registros.length === 0 && !filtro && (
+        <div className="card p-8 text-center text-slate-500">
+          {enProduccion
+            ? 'No hay registros en producción. Pasá los del día desde la solapa 📋 Pendientes.'
+            : 'No hay registros pendientes.'}
+        </div>
+      )}
+      {visibles.length === 0 && filtro && (
         <div className="card p-8 text-center text-slate-500">Ningún paciente coincide con la búsqueda.</div>
       )}
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {visibles.map((r) => {
         const color = colorDeGrupo(r.grupoPaciente || r.paciente);
         return (
-          <button key={r.id} className="card overflow-hidden text-left transition-transform hover:scale-[1.01]"
+          <div key={r.id} role="button" tabIndex={0}
+            className="card cursor-pointer overflow-hidden text-left transition-transform hover:scale-[1.01]"
             style={{ borderColor: color.border, borderWidth: 2 }}
-            onClick={() => setAbiertoId(r.id)}>
+            onClick={() => setAbiertoId(r.id)}
+            onKeyDown={(e) => e.key === 'Enter' && setAbiertoId(r.id)}>
             <div className="px-4 py-3" style={{ background: color.bg, borderBottom: `4px solid ${color.border}` }}>
               <p className="text-2xl font-black uppercase leading-none tracking-tight">
                 {r.paciente || 'SIN NOMBRE'}
@@ -119,17 +147,49 @@ export default function EnProceso({
             </div>
             <div className="space-y-1 px-4 py-3 text-sm text-slate-600">
               <p>Fórmula <b>{r.tituloFormula || '—'}</b>{r.indicacion && <> · {r.indicacion}</>}</p>
+              <p>Médico <b>{r.medico || '—'}</b></p>
               <p>Lote <b>{formatoLote(r.lotePrefijo, r.loteNumero)}</b></p>
+              <DeadlineBadge deadline={r.deadline} />
               <p className="text-xs text-slate-400">
                 {(r.formula ?? []).slice(0, 3).map((a) => a.activo).join(' · ')}
                 {(r.formula ?? []).length > 3 && ` +${r.formula.length - 3}`}
               </p>
-              <p className="pt-1 text-xs font-semibold text-teal-700">Abrir en pantalla completa →</p>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <p className="text-xs font-semibold text-teal-700">Abrir en pantalla completa →</p>
+                <button
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                    enProduccion
+                      ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-teal-600 text-white hover:bg-teal-700'
+                  }`}
+                  title={enProduccion ? 'Sacar de producción (vuelve a Pendientes)' : 'Pasar a la solapa En producción'}
+                  onClick={(e) => { e.stopPropagation(); mover(r); }}>
+                  {enProduccion ? '↩ A pendientes' : '🖨️ A producción'}
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>
     </div>
+  );
+}
+
+// Semáforo de fecha límite de entrega: rojo ≤3 días (o vencida),
+// amarillo ≤5 días, gris el resto. No se muestra si no hay deadline.
+function DeadlineBadge({ deadline }: { deadline: string }) {
+  const dias = diasHasta(deadline);
+  if (dias === null) return null;
+  const clase =
+    dias <= 3 ? 'bg-red-100 text-red-700' : dias <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600';
+  const texto =
+    dias < 0 ? `vencida hace ${-dias} día${dias === -1 ? '' : 's'}`
+    : dias === 0 ? '¡sale HOY!'
+    : `faltan ${dias} día${dias === 1 ? '' : 's'}`;
+  return (
+    <p>
+      <span className={`badge ${clase}`}>⏰ Entrega {fechaAR(deadline)} · {texto}</span>
+    </p>
   );
 }

@@ -214,6 +214,9 @@ export default function RegistroEditor({
           <button className="text-red-600 hover:underline" onClick={eliminar}>Eliminar registro</button>
         </div>
 
+        {/* ---------- 0 · Esquema de impresión (resumen para el operador) ---------- */}
+        <EsquemaImpresion r={r} resultado={resultado} />
+
         {/* ---------- 1 · Receta ---------- */}
         <section>
           <h3 className="section-title text-sm">📄 1 · Datos de la receta</h3>
@@ -528,6 +531,13 @@ export default function RegistroEditor({
                 onChange={(e) => set({ fechaHoraFin: e.target.value })} />
             </div>
             <div>
+              <label className="label">Deadline (fecha límite de entrega — no se imprime)</label>
+              <div className="flex items-center gap-2">
+                <input className="input" type="date" value={r.deadline}
+                  onChange={(e) => set({ deadline: e.target.value })} />
+              </div>
+            </div>
+            <div>
               <label className="label">Fecha elaboración</label>
               <input className="input" type="date" value={r.fechaElab}
                 onChange={(e) => set({ fechaElab: e.target.value, fechaVto: sumarMeses(e.target.value || hoyISO(), MESES_VENCIMIENTO) })} />
@@ -626,6 +636,57 @@ export default function RegistroEditor({
           onCambiarDivision={cambiarDivision}
           onAplicarDilucion={aplicarDilucion}
         />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------
+// Esquema de impresión: resumen visual arriba de todo para que el
+// operador vea de un vistazo qué imprimir, sin bucear en el registro.
+// Tinta · dosis · extrusión/cáps · mL totales, + cápsulas y volumen.
+// ---------------------------------------------------------------
+const COLORES_CAPAS = ['#10b981', '#0ea5e9', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#f97316', '#84cc16'];
+
+function EsquemaImpresion({ r, resultado }: { r: Registro; resultado: ReturnType<typeof calcularCapsula> }) {
+  const capas = r.capas ?? [];
+  if (capas.length === 0) return null;
+  const totales = r.capsulasTotales ?? 0;
+  const mlFinales = capas.reduce((s2, c, i) => s2 + (resultado.capas[i]?.extrusion ?? 0), 0) * totales;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border-2 border-slate-800 bg-slate-900 text-white shadow-lg">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+        <h3 className="text-sm font-black uppercase tracking-wider">🖨️ Esquema de impresión</h3>
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-white/10 px-2.5 py-1">
+            💊 <b>{totales || '—'}</b> cápsulas{resultado.capsulasPorToma > 1 && <> · <b className="text-red-300">{resultado.capsulasPorToma}/toma</b></>}
+          </span>
+          <span className="rounded-full bg-white/10 px-2.5 py-1">🧪 <b>{fmtMl(resultado.volumenTotal)}</b>/cáps</span>
+          <span className="rounded-full bg-teal-500/25 px-2.5 py-1">Σ tinta a usar: <b>{totales > 0 ? `${Number(mlFinales.toFixed(1))} mL` : '—'}</b></span>
+        </div>
+      </div>
+      <div className="divide-y divide-white/10 bg-slate-800/60">
+        {capas.map((c, i) => {
+          const calc = resultado.capas[i];
+          const mlTot = calc?.extrusion != null && totales > 0 ? calc.extrusion * totales : null;
+          return (
+            <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-sm">
+              <span className="flex min-w-52 flex-1 items-center gap-2 font-bold">
+                <span className="inline-block h-3.5 w-3.5 shrink-0 rounded"
+                  style={{ background: COLORES_CAPAS[i % COLORES_CAPAS.length] }} />
+                {c.tinta || c.activoReceta || `Capa ${i + 1}`}
+                <span className={`badge ${c.ubicacion === 'tapa' ? 'bg-sky-500/25 text-sky-200' : 'bg-white/10 text-slate-300'}`}>
+                  {c.ubicacion}
+                </span>
+              </span>
+              <span className="text-slate-300">dosis <b className="text-white">{c.dosisMg != null ? `${Number(c.dosisMg.toFixed(3))} mg` : '—'}</b></span>
+              <span className="text-slate-300">extrusión <b className={calc?.bajoMinimo ? 'text-red-300' : 'text-teal-300'}>{fmtMl(calc?.extrusion)}</b>/cáps</span>
+              <span className="text-slate-300">total <b className="text-white">{mlTot != null ? `${Number(mlTot.toFixed(2))} mL` : '—'}</b></span>
+              {c.lote && <span className="text-xs text-slate-400">lote {c.lote}</span>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

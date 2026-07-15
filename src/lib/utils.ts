@@ -20,6 +20,17 @@ export function fechaAR(iso: string): string {
   return `${d}/${m}/${y.slice(2)}`;
 }
 
+// Días de hoy hasta una fecha ISO (0 = hoy, negativo = vencida)
+export function diasHasta(iso: string): number | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!d) return null;
+  const hoy = new Date();
+  const a = Date.UTC(y, m - 1, d);
+  const b = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return Math.round((a - b) / 86400000);
+}
+
 // datetime-local: 2026-07-15T09:20 → 15/07/26 - 09:20
 export function fechaHoraAR(v: string): string {
   if (!v) return '';

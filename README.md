@@ -1,4 +1,13 @@
 # M.A.L.V.I.N.A.S 2.0 — Nueva Farmacia Badra (PILL.AR)
+## v2.0.6 (15-jul-2026) — flujo de taller
+
+1. **Tarjetas con médico**: el nombre del médico aparece junto a fórmula y lote.
+2. **Solapa "En producción"** (a la izquierda de Pendientes): los registros nacen en **Pendientes** (ex "Producto Terminado") y con el botón "🖨️ A producción" pasan a la solapa del día; "↩ A pendientes" los devuelve. Orden final: Lector · En producción · Pendientes · Producto Intermedio · Terminados · Gestión.
+3. **Deadline por registro** (sección 4, campo "no se imprime"): semáforo en las tarjetas — ⏰ gris normal, **amarillo a ≤5 días**, **rojo a ≤3 días o vencida** ("¡sale HOY!" el mismo día). No aparece en el documento impreso.
+4. **Esquema de impresión**: panel oscuro arriba de todo el registro con el resumen operativo por capa (tinta, ubicación, dosis, extrusión/cáps, mL totales, lote de PI) + cápsulas totales y Σ de tinta a usar.
+
+**Antes de deployar: correr `migration-v2.0.6.sql` en Neon** (agrega `en_produccion` y `deadline` a registros; inofensiva de repetir).
+
 ## v2.0.5 (15-jul-2026) — documento y usabilidad
 
 1. **Sin URL del navegador en los documentos**: CSS de impresión con `@page` sin margen vertical — Chrome ya no dibuja su encabezado/pie (URL vercel.app, fecha, Nº de página).

@@ -18,14 +18,15 @@ export type Catalogos = {
 
 const TABS = [
   { id: 'lector', label: '📄 Lector de recetas' },
-  { id: 'pt', label: '💊 Producto Terminado' },
+  { id: 'prod', label: '🖨️ En producción' },
+  { id: 'pt', label: '📋 Pendientes' },
   { id: 'pi', label: '🧪 Producto Intermedio' },
   { id: 'terminados', label: '✅ Terminados' },
   { id: 'gestion', label: '🗂️ Gestión' },
 ] as const;
 
 export default function Home() {
-  const [tab, setTab] = useState<string>('pt');
+  const [tab, setTab] = useState<string>('prod');
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [registrosPi, setRegistrosPi] = useState<RegistroPi[]>([]);
   const [catalogos, setCatalogos] = useState<Catalogos | null>(null);
@@ -70,6 +71,8 @@ export default function Home() {
   }, []);
 
   const ptProceso = registros.filter((r) => r.estado === 'en_proceso');
+  const enProduccion = ptProceso.filter((r) => r.enProduccion);
+  const pendientes = ptProceso.filter((r) => !r.enProduccion);
   const piProceso = registrosPi.filter((r) => r.estado === 'en_proceso');
   const ptTerm = registros.filter((r) => r.estado === 'terminado');
   const piTerm = registrosPi.filter((r) => r.estado === 'terminado');
@@ -93,7 +96,7 @@ export default function Home() {
 
       <nav className="mb-5 flex flex-wrap gap-2">
         {TABS.map((t) => {
-          const count = t.id === 'pt' ? ptProceso.length : t.id === 'pi' ? piProceso.length : 0;
+          const count = t.id === 'prod' ? enProduccion.length : t.id === 'pt' ? pendientes.length : t.id === 'pi' ? piProceso.length : 0;
           return (
             <button
               key={t.id}
@@ -118,9 +121,13 @@ export default function Home() {
       {tab === 'lector' && catalogos && (
         <LectorRecetas catalogos={catalogos} onCreados={() => { recargar(); setTab('pt'); }} />
       )}
+      {tab === 'prod' && catalogos && (
+        <EnProceso registros={enProduccion} catalogos={catalogos} onCambio={recargar}
+          onActualizado={actualizarRegistro} enProduccion />
+      )}
       {tab === 'pt' && catalogos && (
-        <EnProceso registros={ptProceso} catalogos={catalogos} onCambio={recargar}
-          onActualizado={actualizarRegistro} />
+        <EnProceso registros={pendientes} catalogos={catalogos} onCambio={recargar}
+          onActualizado={actualizarRegistro} enProduccion={false} />
       )}
       {tab === 'pi' && catalogos && (
         <ProductoIntermedio registros={piProceso} catalogos={catalogos} onCambio={recargar}

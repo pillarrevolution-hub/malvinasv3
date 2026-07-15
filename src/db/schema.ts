@@ -138,6 +138,11 @@ export const registros = pgTable('registros', {
   envases: integer('envases'),
   tipoEnvase: text('tipo_envase').notNull().default('Envase plástico color caramelo'),
   producto: text('producto').notNull().default('CÁPSULAS MULTICAPA DE MANUFACTURA ADITIVA'),
+  // Flujo del taller: los registros nacen en "Pendientes" y el equipo pasa
+  // a "En producción" los que hay que hacer en el día (ida y vuelta).
+  enProduccion: boolean('en_produccion').notNull().default(false),
+  // Fecha límite de salida del producto (semáforo en tarjetas; NO se imprime)
+  deadline: text('deadline').notNull().default(''),
   masaVolumen: text('masa_volumen').notNull().default('CÁPSULAS 00 (1 ML)'),
 
   lotePrefijo: text('lote_prefijo').notNull().default('PT001'),

@@ -5,7 +5,7 @@ import {
   autoUbicarCapas, capaDesdeTinta, dosisEnMgParaTinta, tintasParaActivo,
   calcularCapsula, pesadasPI, poeDesdeLote, limpiarNombreTinta,
 } from '../src/lib/engine';
-import { fechaAR, fechaHoraAR, coincideFiltro } from '../src/lib/utils';
+import { fechaAR, fechaHoraAR, coincideFiltro, diasHasta } from '../src/lib/utils';
 
 let fallas = 0;
 function check(nombre: string, cond: boolean, detalle = '') {
@@ -124,6 +124,18 @@ check('fechaHoraAR: con hora', fechaHoraAR('2026-07-15T09:20') === '15/07/26 - 0
 check('filtro: sin tildes ni mayúsculas', coincideFiltro('perez', 'María PÉREZ', null) === true);
 check('filtro: no coincide', coincideFiltro('gomez', 'María Pérez', 'PT001 / P166') === false);
 check('filtro vacío: muestra todo', coincideFiltro('', 'x') === true);
+
+
+// ---------- v2.0.6: deadline ----------
+const iso = (dias: number) => {
+  const d = new Date(Date.now() + dias * 86400000);
+  return d.toISOString().slice(0, 10);
+};
+check('diasHasta: hoy → 0', diasHasta(iso(0)) === 0);
+check('diasHasta: +5 días → 5 (amarillo)', diasHasta(iso(5)) === 5);
+check('diasHasta: +3 días → 3 (rojo)', diasHasta(iso(3)) === 3);
+check('diasHasta: vencida → negativo', (diasHasta(iso(-2)) ?? 0) < 0);
+check('diasHasta: sin fecha → null', diasHasta('') === null);
 
 console.log(fallas === 0 ? '\n✅ TODOS LOS TESTS PASAN' : `\n❌ ${fallas} tests fallaron`);
 process.exit(fallas === 0 ? 0 : 1);
