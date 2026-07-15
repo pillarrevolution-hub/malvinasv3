@@ -12,10 +12,27 @@ export function sumarMeses(iso: string, meses: number): string {
   return f.toISOString().slice(0, 10);
 }
 
+// Formato argentino corto: 2026-07-15 → 15/07/26
 export function fechaAR(iso: string): string {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+  if (!d) return iso;
+  return `${d}/${m}/${y.slice(2)}`;
+}
+
+// datetime-local: 2026-07-15T09:20 → 15/07/26 - 09:20
+export function fechaHoraAR(v: string): string {
+  if (!v) return '';
+  const [f, h] = v.split('T');
+  return h ? `${fechaAR(f)} - ${h}` : fechaAR(f);
+}
+
+// Búsqueda sin distinción de mayúsculas ni tildes, contra varios campos
+export function coincideFiltro(filtro: string, ...campos: (string | number | null | undefined)[]): boolean {
+  const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const f = norm(filtro.trim());
+  if (!f) return true;
+  return campos.some((c) => c != null && norm(String(c)).includes(f));
 }
 
 // ---- Lotes ----

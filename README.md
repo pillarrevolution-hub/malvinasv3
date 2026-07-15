@@ -1,4 +1,15 @@
 # M.A.L.V.I.N.A.S 2.0 — Nueva Farmacia Badra (PILL.AR)
+## v2.0.5 (15-jul-2026) — documento y usabilidad
+
+1. **Sin URL del navegador en los documentos**: CSS de impresión con `@page` sin margen vertical — Chrome ya no dibuja su encabezado/pie (URL vercel.app, fecha, Nº de página).
+2. **Registros de PI con nombre limpio**: el activo y el nombre del producto se derivan sin concentración/apodos ("Melatonina", no "Melatonina para 1 mg"); los registros de PI ya creados conservan su texto pero el campo "Nombre del producto" es editable.
+3. **"Nombre del producto" editable** en la sección 4 · Producción (default "CÁPSULAS MULTICAPA DE MANUFACTURA ADITIVA", agregable p.ej. "… para migraña").
+4. **Fechas en formato argentino corto** (15/07/26) en documentos, rótulos y listados.
+5. **Celdas vacías del proceso muestran "-"** (Otros, unidades) en ambos documentos.
+6. **Buscadores** en Producto Terminado, Producto Intermedio y Terminados: por paciente, médico, lote, tinta, activo, fecha — sin distinción de mayúsculas ni tildes.
+
+Sin migración de base: esta versión es solo código.
+
 ## v2.0.4 (15-jul-2026) — documento final y excipientes
 
 1. **Nº POE en el documento del lote**: se deriva solo del lote de PI usado (parte antes de la barra: `FPI.01.PI013/P006` → POE `FPI.01.PI013`). No hay que cargar nada.

@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { registrosPi } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { FARMACIA } from '@/lib/config';
-import { fechaAR, formatoLotePI } from '@/lib/utils';
+import { fechaAR, fechaHoraAR, formatoLotePI } from '@/lib/utils';
 import BotonImprimir from '@/components/BotonImprimir';
 
 export const dynamic = 'force-dynamic';
@@ -26,8 +26,8 @@ export default async function PrintRegistroPI({ params }: { params: { id: string
         <p><b>CANTIDAD DE UNIDADES INDIVIDUALES A PRODUCIR:</b> {r.jeringas} jeringas plásticas de {r.volumenJeringaMl} ml</p>
         <p><b>MASA O VOLUMEN DE LAS UNIDADES INDIVIDUALES:</b> {r.volumenJeringaMl} ml</p>
         <p><b>CANTIDAD DE PRODUCTO:</b> {r.cantidadProductoG} g</p>
-        <p><b>FECHA Y HORA DE INICIO DE PRODUCCIÓN:</b> {r.fechaHoraInicio.replace('T', ' - ')}</p>
-        <p><b>FECHA Y HORA DE FINALIZACIÓN DE PRODUCCIÓN:</b> {r.fechaHoraFin.replace('T', ' - ')}</p>
+        <p><b>FECHA Y HORA DE INICIO DE PRODUCCIÓN:</b> {fechaHoraAR(r.fechaHoraInicio) || '-'}</p>
+        <p><b>FECHA Y HORA DE FINALIZACIÓN DE PRODUCCIÓN:</b> {fechaHoraAR(r.fechaHoraFin) || '-'}</p>
         <p><b>NOMBRE Y APELLIDO DEL OPERADOR:</b> {r.operador}</p>
         <p><b>CANTIDAD DE ENVASES:</b> {r.jeringas} jeringas plásticas de {r.volumenJeringaMl} ml</p>
       </div>
@@ -98,8 +98,8 @@ export default async function PrintRegistroPI({ params }: { params: { id: string
             ].map(([nombre, valor, unidad], i) => (
               <tr key={i}>
                 <td className="border border-black p-1 text-left font-bold">{nombre}</td>
-                <td className="border border-black p-1">{valor}</td>
-                <td className="border border-black p-1">{unidad}</td>
+                <td className="border border-black p-1">{valor === '' || valor == null ? '-' : valor}</td>
+                <td className="border border-black p-1">{unidad === '' ? '-' : unidad}</td>
               </tr>
             ))}
           </tbody>

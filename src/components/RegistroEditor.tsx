@@ -474,6 +474,11 @@ export default function RegistroEditor({
         {/* ---------- 4 · Producción ---------- */}
         <section>
           <h3 className="section-title text-sm">🏭 4 · Producción</h3>
+          <div className="mb-3">
+            <label className="label">Nombre del producto (aparece en el documento — editable, ej: “… para migraña”)</label>
+            <input className="input" value={r.producto}
+              onChange={(e) => set({ producto: e.target.value })} />
+          </div>
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
             <div>
               <label className="label">Días de tratamiento</label>

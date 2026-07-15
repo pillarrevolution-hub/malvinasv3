@@ -3,8 +3,9 @@
 import type { Tinta } from '../src/db/schema';
 import {
   autoUbicarCapas, capaDesdeTinta, dosisEnMgParaTinta, tintasParaActivo,
-  calcularCapsula, pesadasPI, poeDesdeLote,
+  calcularCapsula, pesadasPI, poeDesdeLote, limpiarNombreTinta,
 } from '../src/lib/engine';
+import { fechaAR, fechaHoraAR, coincideFiltro } from '../src/lib/utils';
 
 let fallas = 0;
 function check(nombre: string, cond: boolean, detalle = '') {
@@ -109,6 +110,20 @@ check('poeDesdeLote: FPI.01.PI013/P006 → FPI.01.PI013', poeDesdeLote('FPI.01.P
 check('poeDesdeLote: sin barra → vacío', poeDesdeLote('FPI01PI013') === '');
 check('poeDesdeLote: vacío/null → vacío', poeDesdeLote('') === '' && poeDesdeLote(null) === '');
 check('poeDesdeLote: recorta espacios', poeDesdeLote('FPI.01.PI047 /P001') === 'FPI.01.PI047');
+
+
+// ---------- v2.0.5: nombre documental, fechas cortas, filtro ----------
+check('limpiar: "Melatonina para 1 mg 3%" → Melatonina', limpiarNombreTinta('Melatonina para 1 mg 3%') === 'Melatonina');
+check('limpiar: "Melatonina (salvavidas) 20%" → Melatonina', limpiarNombreTinta('Melatonina (salvavidas) 20%') === 'Melatonina');
+check('limpiar: "B12 (concentrada) 5.45%" → B12', limpiarNombreTinta('B12 (concentrada) 5.45%') === 'B12');
+check('limpiar: "Vitamina D (impura) 13%" → Vitamina D', limpiarNombreTinta('Vitamina D (impura) 13%') === 'Vitamina D');
+check('limpiar: OGAP conserva su sigla', limpiarNombreTinta('Aceite de pescado y aerosil (OGAP)') === 'Aceite de pescado y aerosil (OGAP)');
+check('limpiar: "B9 acido folico 0.43%" → B9 acido folico', limpiarNombreTinta('B9 acido folico 0.43%') === 'B9 acido folico');
+check('fechaAR: 2026-07-15 → 15/07/26', fechaAR('2026-07-15') === '15/07/26');
+check('fechaHoraAR: con hora', fechaHoraAR('2026-07-15T09:20') === '15/07/26 - 09:20');
+check('filtro: sin tildes ni mayúsculas', coincideFiltro('perez', 'María PÉREZ', null) === true);
+check('filtro: no coincide', coincideFiltro('gomez', 'María Pérez', 'PT001 / P166') === false);
+check('filtro vacío: muestra todo', coincideFiltro('', 'x') === true);
 
 console.log(fallas === 0 ? '\n✅ TODOS LOS TESTS PASAN' : `\n❌ ${fallas} tests fallaron`);
 process.exit(fallas === 0 ? 0 : 1);

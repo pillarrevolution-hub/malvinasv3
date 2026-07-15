@@ -365,6 +365,19 @@ export function pesadasPI(
   return rows;
 }
 
+// Nombre "limpio" del activo a partir del nombre interno de una tinta,
+// para documentos con validez: saca la concentración final ("3%", "0.43%"),
+// los apodos entre paréntesis (salvavidas, concentrada, diluida, impura) y
+// los sufijos de dosificación ("para 1 mg"). Ej:
+// "Melatonina para 1 mg 3%" → "Melatonina"; "B12 (concentrada) 5.45%" → "B12".
+export function limpiarNombreTinta(nombre: string): string {
+  let n = (nombre ?? '').trim();
+  n = n.replace(/\s*\(\s*(salvavidas|concentrada|diluida|impura)\s*\)/gi, '');
+  n = n.replace(/\s+para\s+\d+([.,]\d+)?\s*(mg|µg|ug|mcg|g|ui)\b/gi, '');
+  n = n.replace(/\s*\d+([.,]\d+)?\s*%.*$/, '');
+  return n.trim() || nombre;
+}
+
 // Nº de POE derivado del lote de PI usado: es la parte inicial del lote.
 // Ej: "FPI.01.PI013/P006" → "FPI.01.PI013". Sin "/" no hay POE derivable.
 export function poeDesdeLote(lote: string | null | undefined): string {

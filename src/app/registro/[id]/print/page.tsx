@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { registros } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { FARMACIA } from '@/lib/config';
-import { fechaAR, formatoLote } from '@/lib/utils';
+import { fechaAR, fechaHoraAR, formatoLote } from '@/lib/utils';
 import { poeDesdeLote } from '@/lib/engine';
 import BotonImprimir from '@/components/BotonImprimir';
 
@@ -48,8 +48,8 @@ export default async function PrintRegistro({ params }: { params: { id: string }
         <p><b>CANTIDAD DE UNIDADES INDIVIDUALES A PRODUCIR:</b> {r.capsulasTotales}</p>
         <p><b>MASA O VOLUMEN DE LAS UNIDADES INDIVIDUALES:</b> {r.masaVolumen}</p>
         <p><b>CANTIDAD DE PRODUCTO:</b> {r.envases} envase{(r.envases ?? 0) !== 1 && 's'} con {r.capsulasPorEnvase} cápsulas</p>
-        <p><b>FECHA Y HORA DE INICIO DE PRODUCCIÓN:</b> {r.fechaHoraInicio.replace('T', ' - ')}</p>
-        <p><b>FECHA Y HORA DE FINALIZACIÓN DE PRODUCCIÓN:</b> {r.fechaHoraFin.replace('T', ' - ')}</p>
+        <p><b>FECHA Y HORA DE INICIO DE PRODUCCIÓN:</b> {fechaHoraAR(r.fechaHoraInicio) || '-'}</p>
+        <p><b>FECHA Y HORA DE FINALIZACIÓN DE PRODUCCIÓN:</b> {fechaHoraAR(r.fechaHoraFin) || '-'}</p>
         <p><b>NOMBRE Y APELLIDO DEL OPERADOR:</b> {r.operador}</p>
         <p><b>CANTIDAD DE ENVASES:</b> {r.envases} {r.tipoEnvase}</p>
       </div>
@@ -130,7 +130,7 @@ export default async function PrintRegistro({ params }: { params: { id: string }
                 <td className="border border-black p-1 text-left font-bold">{nombre}</td>
                 {r.capas.map((_, i) => (
                   <td key={i} className="border border-black p-1">
-                    {valor === 'ORDEN' ? i + 1 : valor}
+                    {valor === 'ORDEN' ? i + 1 : valor === '' || valor == null ? '-' : valor}
                   </td>
                 ))}
                 <td className="border border-black p-1">{unidad}</td>

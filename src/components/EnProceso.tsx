@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { Registro } from '@/db/schema';
 import type { Catalogos } from '@/app/page';
 import { colorDeGrupo } from '@/lib/colors';
-import { formatoLote } from '@/lib/utils';
+import { coincideFiltro, formatoLote } from '@/lib/utils';
 import RegistroEditor from './RegistroEditor';
 
 // =====================================================================
@@ -24,6 +24,16 @@ export default function EnProceso({
   onActualizado: (r: Registro) => void;
 }) {
   const [abiertoId, setAbiertoId] = useState<number | null>(null);
+  const [filtro, setFiltro] = useState('');
+
+  const visibles = registros.filter((r) =>
+    coincideFiltro(
+      filtro,
+      r.paciente, r.medico, r.tituloFormula, r.indicacion,
+      formatoLote(r.lotePrefijo, r.loteNumero),
+      (r.formula ?? []).map((a) => a.activo).join(' ')
+    )
+  );
 
   if (registros.length === 0) {
     return (
@@ -89,8 +99,14 @@ export default function EnProceso({
 
   // ---------------- LISTA: tarjetas compactas ----------------
   return (
+    <div className="space-y-3">
+      <input className="input max-w-md" placeholder="🔍 Buscar por paciente, médico, lote, activo…"
+        value={filtro} onChange={(e) => setFiltro(e.target.value)} />
+      {visibles.length === 0 && (
+        <div className="card p-8 text-center text-slate-500">Ningún paciente coincide con la búsqueda.</div>
+      )}
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {registros.map((r) => {
+      {visibles.map((r) => {
         const color = colorDeGrupo(r.grupoPaciente || r.paciente);
         return (
           <button key={r.id} className="card overflow-hidden text-left transition-transform hover:scale-[1.01]"
@@ -113,6 +129,7 @@ export default function EnProceso({
           </button>
         );
       })}
+    </div>
     </div>
   );
 }

@@ -2,9 +2,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RegistroPi, MateriaPrima, Tinta } from '@/db/schema';
 import type { Catalogos } from '@/app/page';
-import { hoyISO, sumarMeses, formatoLotePI } from '@/lib/utils';
+import { hoyISO, sumarMeses, formatoLotePI, coincideFiltro } from '@/lib/utils';
 import { MESES_VENCIMIENTO } from '@/lib/config';
-import { pesadasPI, fmtG, fmtPct } from '@/lib/engine';
+import { pesadasPI, fmtG, fmtPct, limpiarNombreTinta } from '@/lib/engine';
 import { faltantesPI } from '@/lib/validation';
 
 const DRAFT_KEY = (id: number) => `draft-pi-${id}`;
@@ -22,6 +22,12 @@ export default function ProductoIntermedio({
 }) {
   const [abiertos, setAbiertos] = useState<Record<number, boolean>>({});
   const [tintaNueva, setTintaNueva] = useState('');
+  const [filtro, setFiltro] = useState('');
+
+  const visibles = registros.filter((r) =>
+    coincideFiltro(filtro, r.nombreProducto, r.operador, r.poe,
+      formatoLotePI(r.poe, r.loteNumero))
+  );
   const [creando, setCreando] = useState(false);
 
   async function nuevaProduccion() {
@@ -34,7 +40,7 @@ export default function ProductoIntermedio({
       estado: 'en_proceso',
       tintaId: t.id,
       tintaNombre: t.nombre,
-      nombreProducto: `TINTA ${t.nombre.toUpperCase()}`,
+      nombreProducto: `TINTA DE ${limpiarNombreTinta(t.nombre).toUpperCase()}`,
       poe: t.poe,
       loteNumero: nl.proximo,
       concentracion: t.concentracion,
@@ -80,13 +86,18 @@ export default function ProductoIntermedio({
         </p>
       </div>
 
+      <input className="input max-w-md" placeholder="🔍 Buscar por tinta, lote, operador…"
+        value={filtro} onChange={(e) => setFiltro(e.target.value)} />
+
       {registros.length === 0 ? (
         <div className="card p-10 text-center text-slate-500">
           No hay producciones de producto intermedio en proceso.
         </div>
+      ) : visibles.length === 0 ? (
+        <div className="card p-10 text-center text-slate-500">Ningún lote coincide con la búsqueda.</div>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          {registros.map((r) => {
+          {visibles.map((r) => {
             const abierto = abiertos[r.id] ?? false;
             return (
               <div key={r.id} className="card overflow-hidden border-l-4 border-l-teal-600">
@@ -194,7 +205,9 @@ function PiEditor({
   // ---- Pesadas teóricas en vivo ----
   const teoricas = useMemo(() => {
     if (!r.concentracion || !r.cantidadProductoG || !tinta) return [];
-    const activoNombre = tinta.nombre.replace(/\s*\d+([.,]\d+)?\s*%.*$/, '').trim() || tinta.nombre;
+    // Nombre limpio del activo para el documento (sin concentración,
+    // apodos ni "para X mg"): "Melatonina", no "Melatonina para 1 mg".
+    const activoNombre = limpiarNombreTinta(tinta.nombre);
     return pesadasPI(activoNombre, r.concentracion, r.cantidadProductoG, tinta.excipientes ?? [], catalogos.tintas);
   }, [r.concentracion, r.cantidadProductoG, tinta, catalogos.tintas]);
 

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type { Registro, RegistroPi } from '@/db/schema';
 import { colorDeGrupo } from '@/lib/colors';
-import { formatoLote, formatoLotePI, fechaAR } from '@/lib/utils';
+import { formatoLote, formatoLotePI, fechaAR, coincideFiltro } from '@/lib/utils';
 import { generarRotulo } from '@/lib/rotulo';
 import { SUCURSALES } from '@/lib/config';
 
@@ -16,6 +16,20 @@ export default function Terminados({
   onCambio: () => void;
 }) {
   const [rotuloDe, setRotuloDe] = useState<Registro | null>(null);
+  const [filtro, setFiltro] = useState('');
+
+  const ptVisibles = registros.filter((r) =>
+    coincideFiltro(
+      filtro,
+      r.paciente, r.medico, r.tituloFormula, r.indicacion, r.producto,
+      formatoLote(r.lotePrefijo, r.loteNumero), r.fechaElab && fechaAR(r.fechaElab),
+      (r.formula ?? []).map((a) => a.activo).join(' ')
+    )
+  );
+  const piVisibles = registrosPi.filter((r) =>
+    coincideFiltro(filtro, r.nombreProducto, r.operador, r.poe,
+      formatoLotePI(r.poe, r.loteNumero), r.fechaElab && fechaAR(r.fechaElab))
+  );
   const [sucursal, setSucursal] = useState(SUCURSALES[0].id);
   const [copiado, setCopiado] = useState(false);
 
@@ -36,14 +50,19 @@ export default function Terminados({
 
   return (
     <div className="space-y-6">
+      <input className="input max-w-md" placeholder="🔍 Buscar por paciente, médico, lote, tinta, fecha…"
+        value={filtro} onChange={(e) => setFiltro(e.target.value)} />
+
       {/* -------- Producto terminado -------- */}
       <div>
-        <h2 className="section-title">💊 Producto terminado</h2>
+        <h2 className="section-title">💊 Producto terminado{filtro && ` · ${ptVisibles.length} de ${registros.length}`}</h2>
         {registros.length === 0 ? (
           <div className="card p-8 text-center text-slate-500">Todavía no hay lotes de producto terminado.</div>
+        ) : ptVisibles.length === 0 ? (
+          <div className="card p-8 text-center text-slate-500">Ningún lote coincide con la búsqueda.</div>
         ) : (
           <div className="space-y-3">
-            {registros.map((r) => {
+            {ptVisibles.map((r) => {
               const color = colorDeGrupo(r.grupoPaciente || r.paciente);
               return (
                 <div key={r.id} className="card flex flex-wrap items-center justify-between gap-3 p-4"
@@ -73,12 +92,12 @@ export default function Terminados({
 
       {/* -------- Producto intermedio -------- */}
       <div>
-        <h2 className="section-title">🧪 Producto intermedio</h2>
+        <h2 className="section-title">🧪 Producto intermedio{filtro && ` · ${piVisibles.length} de ${registrosPi.length}`}</h2>
         {registrosPi.length === 0 ? (
           <div className="card p-8 text-center text-slate-500">Todavía no hay lotes de producto intermedio.</div>
         ) : (
           <div className="space-y-3">
-            {registrosPi.map((r) => (
+            {piVisibles.map((r) => (
               <div key={r.id} className="card flex flex-wrap items-center justify-between gap-3 border-l-[6px] border-l-teal-600 p-4">
                 <div>
                   <p className="text-lg font-black uppercase leading-tight">{r.tintaNombre}</p>
