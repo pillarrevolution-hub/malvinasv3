@@ -72,7 +72,7 @@ export default function Admin({ catalogos, onCambio }: { catalogos: Catalogos; o
                   </td>
                   <td className="pr-2 font-mono text-xs">{t.poe || '—'}</td>
                   <td className="pr-2 text-xs text-slate-500">
-                    {(t.excipientes ?? []).map((e) => `${e.nombre} ${Math.round(e.fraccion * 100)}%`).join(' · ') || '—'}
+                    {(t.excipientes ?? []).map((e) => `${e.nombre} ${Number((e.fraccion * 100).toFixed(2))}%`).join(' · ') || '—'}
                   </td>
                   <td className="whitespace-nowrap">
                     <button className="mr-2 text-slate-400 hover:text-teal-700" onClick={() => setEditando(t)}>✎</button>
@@ -141,15 +141,35 @@ function TintaModal({
   });
   const [error, setError] = useState('');
 
+  // SEMÁNTICA v2.0.4: los % de excipientes son sobre el TOTAL de la tinta.
+  // Activo (concentración) + excipientes = 100%.
+  // Ej: Pregnenolona 5,7% → excipientes deben sumar 94,3%.
+  const objetivoExc = Math.max(0, 1 - (t.concentracion || 0) / 100);
   const sumaFracciones = t.excipientes.reduce((s, e) => s + (e.fraccion || 0), 0);
-  const fraccionesOk = t.excipientes.length === 0 || Math.abs(sumaFracciones - 1) < 0.001;
+  const fraccionesOk = t.excipientes.length === 0 || Math.abs(sumaFracciones - objetivoExc) < 0.002;
+
+  // Completa el último excipiente con lo que falta para llegar a 100%
+  // (el clásico "c.s.p."): restante = objetivo − suma de los demás.
+  const completarRestante = () =>
+    setT((p) => {
+      if (p.excipientes.length === 0) return p;
+      const otros = p.excipientes.slice(0, -1).reduce((s, e) => s + (e.fraccion || 0), 0);
+      const resto = Math.max(0, Number((objetivoExc - otros).toFixed(6)));
+      return {
+        ...p,
+        excipientes: p.excipientes.map((e, j) => (j === p.excipientes.length - 1 ? { ...e, fraccion: resto } : e)),
+      };
+    });
 
   const setExc = (i: number, patch: Partial<ExcipienteTinta>) =>
     setT((p) => ({ ...p, excipientes: p.excipientes.map((e, j) => (j === i ? { ...e, ...patch } : e)) }));
 
   async function guardar() {
     if (!t.nombre.trim()) { setError('Falta el nombre'); return; }
-    if (!fraccionesOk) { setError('Las fracciones de excipientes deben sumar 100%'); return; }
+    if (!fraccionesOk) {
+      setError(`Activo + excipientes deben sumar 100%: con ${Number(t.concentracion.toFixed(4))}% de activo, los excipientes tienen que sumar ${Number((objetivoExc * 100).toFixed(4))}%`);
+      return;
+    }
     const body = {
       tabla: 'tintas',
       ...(tinta ? { id: tinta.id } : {}),
@@ -260,12 +280,14 @@ function TintaModal({
           </div>
         </div>
 
-        {/* Excipientes con fracciones exactas */}
+        {/* Excipientes: % sobre el TOTAL de la tinta (activo + excipientes = 100%) */}
         <div>
-          <div className="mb-1 flex items-center justify-between">
-            <label className="label mb-0">Excipientes de la tinta (fracciones del total de excipiente)</label>
-            <span className={`badge ${fraccionesOk ? 'bg-emerald-50 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-              Σ {Math.round(sumaFracciones * 100)}% {fraccionesOk ? '✓' : '≠ 100%'}
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+            <label className="label mb-0">Excipientes (% del total de la tinta)</label>
+            <span className={`badge ${fraccionesOk || t.excipientes.length === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+              Activo {Number(t.concentracion.toFixed(4))}% + excip. {Number((sumaFracciones * 100).toFixed(4))}%
+              {' = '}{Number(((t.concentracion / 100 + sumaFracciones) * 100).toFixed(4))}%
+              {fraccionesOk || t.excipientes.length === 0 ? ' ✓' : ' ≠ 100%'}
             </span>
           </div>
           {t.excipientes.length > 0 && (
@@ -281,7 +303,7 @@ function TintaModal({
                 autoFocus={!e.nombre} value={e.nombre}
                 onChange={(ev) => setExc(i, { nombre: ev.target.value })} />
               <input className="input" type="number" step="any" placeholder="%"
-                value={Number((e.fraccion * 100).toFixed(3))}
+                value={Number((e.fraccion * 100).toFixed(4))}
                 onChange={(ev) => setExc(i, { fraccion: Number(ev.target.value) / 100 })} />
               <button className="text-red-500"
                 onClick={() => setT((p) => ({ ...p, excipientes: p.excipientes.filter((_, j) => j !== i) }))}>✕</button>
@@ -290,10 +312,18 @@ function TintaModal({
           <datalist id="dl-excipientes-tinta">
             {excipientesCatalogo.map((n) => <option key={n} value={n} />)}
           </datalist>
-          <button className="btn-ghost text-xs"
-            onClick={() => setT((p) => ({ ...p, excipientes: [...p.excipientes, { nombre: '', fraccion: 0 }] }))}>
-            + Agregar excipiente
-          </button>
+          <div className="flex gap-2">
+            <button className="btn-ghost text-xs"
+              onClick={() => setT((p) => ({ ...p, excipientes: [...p.excipientes, { nombre: '', fraccion: 0 }] }))}>
+              + Agregar excipiente
+            </button>
+            {t.excipientes.length > 0 && !fraccionesOk && (
+              <button className="btn-ghost text-xs text-teal-700" title="Completa el último excipiente con lo que falta para llegar a 100% (c.s.p.)"
+                onClick={completarRestante}>
+                ⚖ Completar restante en el último ({Number((Math.max(0, objetivoExc - t.excipientes.slice(0, -1).reduce((s, e) => s + (e.fraccion || 0), 0)) * 100).toFixed(4))}%)
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Parámetros de impresora */}

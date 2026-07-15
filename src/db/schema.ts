@@ -19,7 +19,7 @@ export type ActivoFormula = {
 
 export type ExcipienteTinta = {
   nombre: string;
-  fraccion: number; // 0-1, la suma debe dar 1
+  fraccion: number; // 0-1, sobre el TOTAL de la tinta: concentración + Σ fracciones = 1
 };
 
 export type ParametrosImpresion = {

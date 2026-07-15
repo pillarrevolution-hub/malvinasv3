@@ -9,7 +9,7 @@
     "excipientes": [
       {
         "nombre": "Aerosil",
-        "fraccion": 1
+        "fraccion": 0.03
       }
     ],
     "parametros": {
@@ -36,11 +36,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.833
+        "fraccion": 0.4998
       },
       {
         "nombre": "PG",
-        "fraccion": 0.167
+        "fraccion": 0.1002
       }
     ],
     "parametros": {
@@ -67,11 +67,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.865
+        "fraccion": 0.692
       },
       {
         "nombre": "PG",
-        "fraccion": 0.135
+        "fraccion": 0.108
       }
     ],
     "parametros": {
@@ -98,11 +98,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.776
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.194
       }
     ],
     "parametros": {
@@ -129,7 +129,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -156,7 +156,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.4
       }
     ],
     "parametros": null,
@@ -175,11 +175,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.7912
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.1978
       }
     ],
     "parametros": {
@@ -206,11 +206,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.7564
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.1891
       }
     ],
     "parametros": {
@@ -237,11 +237,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.79816
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.19954
       }
     ],
     "parametros": {
@@ -268,11 +268,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.52
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.13
       }
     ],
     "parametros": {
@@ -299,11 +299,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.79656
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.19914
       }
     ],
     "parametros": {
@@ -330,7 +330,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.45
       }
     ],
     "parametros": {
@@ -357,7 +357,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.4
       }
     ],
     "parametros": {
@@ -384,7 +384,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -411,7 +411,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.45
       }
     ],
     "parametros": null,
@@ -430,7 +430,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -457,7 +457,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 5%",
-        "fraccion": 1
+        "fraccion": 0.4
       }
     ],
     "parametros": {
@@ -484,7 +484,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.87
       }
     ],
     "parametros": {
@@ -511,11 +511,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.714
+        "fraccion": 0.4998
       },
       {
         "nombre": "PG",
-        "fraccion": 0.286
+        "fraccion": 0.2002
       }
     ],
     "parametros": {
@@ -542,11 +542,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.99
+        "fraccion": 0.98802
       },
       {
         "nombre": "PG",
-        "fraccion": 0.01
+        "fraccion": 0.00998
       }
     ],
     "parametros": {
@@ -573,11 +573,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.99
+        "fraccion": 0.98604
       },
       {
         "nombre": "PG",
-        "fraccion": 0.01
+        "fraccion": 0.00996
       }
     ],
     "parametros": {
@@ -604,7 +604,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -631,7 +631,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -658,7 +658,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -685,7 +685,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.4
       }
     ],
     "parametros": null,
@@ -704,7 +704,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.45
       }
     ],
     "parametros": {
@@ -731,7 +731,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0.99
       }
     ],
     "parametros": {
@@ -758,7 +758,7 @@
     "excipientes": [
       {
         "nombre": "Aerosil 4%",
-        "fraccion": 1
+        "fraccion": 0.6
       }
     ],
     "parametros": {
@@ -785,7 +785,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.4
       }
     ],
     "parametros": {
@@ -812,7 +812,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.6
       }
     ],
     "parametros": {
@@ -839,7 +839,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.55
       }
     ],
     "parametros": null,
@@ -858,7 +858,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -885,7 +885,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": null,
@@ -904,7 +904,7 @@
     "excipientes": [
       {
         "nombre": "Aerosil",
-        "fraccion": 1
+        "fraccion": 0.04
       }
     ],
     "parametros": {
@@ -931,7 +931,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -958,7 +958,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.6
       }
     ],
     "parametros": {
@@ -985,7 +985,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0.85
       }
     ],
     "parametros": {
@@ -1012,7 +1012,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0.8
       }
     ],
     "parametros": {
@@ -1039,7 +1039,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0.9333
       }
     ],
     "parametros": {
@@ -1066,11 +1066,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.99
+        "fraccion": 0.9801
       },
       {
         "nombre": "PPG",
-        "fraccion": 0.01
+        "fraccion": 0.0099
       }
     ],
     "parametros": {
@@ -1097,11 +1097,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.99
+        "fraccion": 0.9504
       },
       {
         "nombre": "PPG",
-        "fraccion": 0.01
+        "fraccion": 0.0096
       }
     ],
     "parametros": {
@@ -1128,11 +1128,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.989
+        "fraccion": 0.90988
       },
       {
         "nombre": "PPG",
-        "fraccion": 0.011
+        "fraccion": 0.01012
       }
     ],
     "parametros": {
@@ -1159,7 +1159,7 @@
     "excipientes": [
       {
         "nombre": "Aceite de girasol",
-        "fraccion": 1
+        "fraccion": 0.975
       }
     ],
     "parametros": {
@@ -1186,7 +1186,7 @@
     "excipientes": [
       {
         "nombre": "Aceite de girasol",
-        "fraccion": 1
+        "fraccion": 0.95
       }
     ],
     "parametros": {
@@ -1213,7 +1213,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.4
       }
     ],
     "parametros": {
@@ -1240,11 +1240,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.957
+        "fraccion": 0.71775
       },
       {
         "nombre": "PPG",
-        "fraccion": 0.043
+        "fraccion": 0.03225
       }
     ],
     "parametros": {
@@ -1271,7 +1271,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.55
       }
     ],
     "parametros": {
@@ -1298,7 +1298,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": null,
@@ -1317,7 +1317,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.6
       }
     ],
     "parametros": {
@@ -1344,7 +1344,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.8
       }
     ],
     "parametros": {
@@ -1371,11 +1371,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.79
+        "fraccion": 0.754134
       },
       {
         "nombre": "PG",
-        "fraccion": 0.21
+        "fraccion": 0.200466
       }
     ],
     "parametros": {
@@ -1402,7 +1402,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.6
       }
     ],
     "parametros": {
@@ -1429,7 +1429,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.64
       }
     ],
     "parametros": {
@@ -1456,7 +1456,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.7
       }
     ],
     "parametros": null,
@@ -1475,7 +1475,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 5%",
-        "fraccion": 1
+        "fraccion": 0.85
       }
     ],
     "parametros": {
@@ -1502,7 +1502,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 5%",
-        "fraccion": 1
+        "fraccion": 0.983
       }
     ],
     "parametros": {
@@ -1529,7 +1529,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 5%",
-        "fraccion": 1
+        "fraccion": 0.525
       }
     ],
     "parametros": {
@@ -1556,11 +1556,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.78936
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.19734
       }
     ],
     "parametros": {
@@ -1587,11 +1587,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.99
+        "fraccion": 0.988515
       },
       {
         "nombre": "PG",
-        "fraccion": 0.01
+        "fraccion": 0.009985
       }
     ],
     "parametros": {
@@ -1618,7 +1618,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0
       }
     ],
     "parametros": {
@@ -1645,7 +1645,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0
       }
     ],
     "parametros": {
@@ -1694,7 +1694,7 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 1
+        "fraccion": 0.97
       }
     ],
     "parametros": {
@@ -1721,7 +1721,7 @@
     "excipientes": [
       {
         "nombre": "Oleogel 2,5%",
-        "fraccion": 1
+        "fraccion": 0.5
       }
     ],
     "parametros": {
@@ -1748,11 +1748,11 @@
     "excipientes": [
       {
         "nombre": "PEG 4000",
-        "fraccion": 0.8
+        "fraccion": 0.752
       },
       {
         "nombre": "Agua destilada",
-        "fraccion": 0.2
+        "fraccion": 0.188
       }
     ],
     "parametros": {

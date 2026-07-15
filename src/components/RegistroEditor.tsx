@@ -419,6 +419,16 @@ export default function RegistroEditor({
                         {fmtMl(calc?.extrusion)}
                       </p>
                     </div>
+                    <div className="w-32">
+                      <label className="label" title="Extrusión por cápsula × cápsulas totales: tinta necesaria para todo el lote">
+                        mL totales
+                      </label>
+                      <p className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-sm font-black text-slate-700">
+                        {calc?.extrusion != null && (r.capsulasTotales ?? 0) > 0
+                          ? `${Number((calc.extrusion * (r.capsulasTotales ?? 0)).toFixed(2))} mL`
+                          : '—'}
+                      </p>
+                    </div>
                     <div className="w-36">
                       <label className="label">
                         Ubicación{' '}

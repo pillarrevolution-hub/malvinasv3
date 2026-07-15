@@ -3,7 +3,7 @@
 import type { Tinta } from '../src/db/schema';
 import {
   autoUbicarCapas, capaDesdeTinta, dosisEnMgParaTinta, tintasParaActivo,
-  calcularCapsula,
+  calcularCapsula, pesadasPI, poeDesdeLote,
 } from '../src/lib/engine';
 
 let fallas = 0;
@@ -90,6 +90,25 @@ const cVitc = capaDesdeTinta(2, 'Vit C', 130, 'mg', vitc);
 const r2 = calcularCapsula(autoUbicarCapas([cOgap, cVitc], 1, [ogap, vitc]), { manual: false, capsulasPorToma: 1 });
 check('Regresión motor: OGAP 610 + VitC 130 ≈ 0.944 mL, 1 cápsula', Math.abs(r2.volumenTotal - 0.9438) < 0.001 && r2.capsulasPorToma === 1,
   `vol=${r2.volumenTotal.toFixed(4)}`);
+
+
+// ---------- v2.0.4: pesadasPI con fracciones sobre el total ----------
+
+// Pregnenolona 5,7% + PEG 4000 94,3% → en 100 g: 5,7 g activo + 94,3 g PEG
+const pes = pesadasPI('Pregnenolona', 0.057, 100, [{ nombre: 'PEG 4000', fraccion: 0.943 }], []);
+check('pesadasPI: activo 5,7 g en 100 g', Math.abs(pes[0].gramos - 5.7) < 1e-9, `act=${pes[0].gramos}`);
+check('pesadasPI: PEG 94,3 g en 100 g (fracción sobre el TOTAL)', Math.abs(pes[1].gramos - 94.3) < 1e-9, `peg=${pes[1].gramos}`);
+check('pesadasPI: activo + excipientes = total', Math.abs(pes.reduce((s, p) => s + p.gramos, 0) - 100) < 1e-9);
+
+// OGAP 97% + Aerosil 3%
+const pes2 = pesadasPI('Aceite de pescado', 0.97, 200, [{ nombre: 'Aerosil', fraccion: 0.03 }], []);
+check('pesadasPI: OGAP 200 g → Aerosil 6 g', Math.abs(pes2[1].gramos - 6) < 1e-9, `aerosil=${pes2[1].gramos}`);
+
+// ---------- v2.0.4: POE derivado del lote de PI ----------
+check('poeDesdeLote: FPI.01.PI013/P006 → FPI.01.PI013', poeDesdeLote('FPI.01.PI013/P006') === 'FPI.01.PI013');
+check('poeDesdeLote: sin barra → vacío', poeDesdeLote('FPI01PI013') === '');
+check('poeDesdeLote: vacío/null → vacío', poeDesdeLote('') === '' && poeDesdeLote(null) === '');
+check('poeDesdeLote: recorta espacios', poeDesdeLote('FPI.01.PI047 /P001') === 'FPI.01.PI047');
 
 console.log(fallas === 0 ? '\n✅ TODOS LOS TESTS PASAN' : `\n❌ ${fallas} tests fallaron`);
 process.exit(fallas === 0 ? 0 : 1);

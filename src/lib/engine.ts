@@ -341,7 +341,9 @@ export type PesadaTeorica = {
 };
 
 // Dada una tinta, su concentración (editable) y la cantidad total a producir,
-// desglosa el activo y los excipientes por sus fracciones exactas.
+// desglosa el activo y los excipientes.
+// SEMÁNTICA v2.0.4: la fracción de cada excipiente es SOBRE EL TOTAL de la
+// tinta (activo + excipientes = 100%). Ej: Pregnenolona 5,7% + PEG 94,3%.
 export function pesadasPI(
   activoNombre: string,
   concentracion: number,
@@ -350,7 +352,6 @@ export function pesadasPI(
   catalogoTintas: Tinta[]
 ): PesadaTeorica[] {
   const activoG = cantidadTotalG * concentracion;
-  const excipienteTotalG = cantidadTotalG - activoG;
   const nombresTintas = catalogoTintas.map((t) => normalizar(t.nombre));
   const rows: PesadaTeorica[] = [
     { nombre: activoNombre, esPI: false, gramos: activoG },
@@ -359,9 +360,17 @@ export function pesadasPI(
     const esPI = nombresTintas.some(
       (n) => n.includes(normalizar(e.nombre)) || normalizar(e.nombre).includes(n)
     );
-    rows.push({ nombre: e.nombre, esPI, gramos: excipienteTotalG * e.fraccion });
+    rows.push({ nombre: e.nombre, esPI, gramos: cantidadTotalG * e.fraccion });
   }
   return rows;
+}
+
+// Nº de POE derivado del lote de PI usado: es la parte inicial del lote.
+// Ej: "FPI.01.PI013/P006" → "FPI.01.PI013". Sin "/" no hay POE derivable.
+export function poeDesdeLote(lote: string | null | undefined): string {
+  if (!lote) return '';
+  const i = lote.indexOf('/');
+  return i > 0 ? lote.slice(0, i).trim() : '';
 }
 
 // ---------- Formato ----------

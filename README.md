@@ -1,4 +1,13 @@
 # M.A.L.V.I.N.A.S 2.0 — Nueva Farmacia Badra (PILL.AR)
+## v2.0.4 (15-jul-2026) — documento final y excipientes
+
+1. **Nº POE en el documento del lote**: se deriva solo del lote de PI usado (parte antes de la barra: `FPI.01.PI013/P006` → POE `FPI.01.PI013`). No hay que cargar nada.
+2. **Nombre con validez documental**: en el documento, los productos intermedios figuran como "Tinta de {Activo}" (ej: *Tinta de Melatonina*); el nombre interno con concentración queda solo dentro de la app.
+3. **mL totales por capa**: al lado de "Extrusión/cáps" se muestra el volumen de tinta para todo el lote (extrusión × cápsulas totales).
+4. **Excipientes como % del total de la tinta**: activo + excipientes = 100% (ej: Pregnenolona 5,7% + PEG 4000 94,3%). El modal valida contra ese objetivo y tiene botón "Completar restante" (c.s.p.). Las pesadas teóricas de los lotes de PI se calculan con la nueva semántica.
+
+**Antes de deployar: correr `migration-v2.0.4.sql` en Neon** — convierte las fracciones guardadas a la nueva semántica. Es a prueba de Runs repetidos (tabla `_migraciones`).
+
 ## v2.0.3 (13-jul-2026) — correcciones de producción
 
 1. **Los cambios ya no desaparecen al cambiar de paciente o de solapa**: cada edición actualiza también la lista en memoria de la app (antes solo iba a la base y la pantalla volvía a mostrar datos viejos hasta recargar).

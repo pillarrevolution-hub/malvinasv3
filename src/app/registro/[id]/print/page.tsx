@@ -3,7 +3,16 @@ import { registros } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { FARMACIA } from '@/lib/config';
 import { fechaAR, formatoLote } from '@/lib/utils';
+import { poeDesdeLote } from '@/lib/engine';
 import BotonImprimir from '@/components/BotonImprimir';
+
+// Nombre con validez documental para el PI: "Tinta de {activo}".
+// El nombre interno de la tinta (con concentración/apodos) queda para la app.
+function nombreDocumental(activoReceta: string, tintaInterna: string): string {
+  const a = (activoReceta ?? '').trim();
+  if (!a) return tintaInterna || '-';
+  return `Tinta de ${a.charAt(0).toUpperCase()}${a.slice(1)}`;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -87,9 +96,9 @@ export default async function PrintRegistro({ params }: { params: { id: string }
             {r.capas.map((c, i) => (
               <tr key={i}>
                 <td className="border border-black p-1 font-bold">{i + 1}</td>
-                <td className="border border-black p-1">{c.tinta}</td>
+                <td className="border border-black p-1">{nombreDocumental(c.activoReceta, c.tinta)}</td>
                 <td className="border border-black p-1">{c.lote}</td>
-                <td className="border border-black p-1">{c.poe || '-'}</td>
+                <td className="border border-black p-1">{poeDesdeLote(c.lote) || c.poe || '-'}</td>
                 <td className="border border-black p-1">{c.extrusionMl != null ? c.extrusionMl.toFixed(3) : '-'}</td>
               </tr>
             ))}
