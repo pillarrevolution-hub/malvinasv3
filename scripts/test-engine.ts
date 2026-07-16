@@ -105,6 +105,43 @@ check('pesadasPI: activo + excipientes = total', Math.abs(pes.reduce((s, p) => s
 const pes2 = pesadasPI('Aceite de pescado', 0.97, 200, [{ nombre: 'Aerosil', fraccion: 0.03 }], []);
 check('pesadasPI: OGAP 200 g → Aerosil 6 g', Math.abs(pes2[1].gramos - 6) < 1e-9, `aerosil=${pes2[1].gramos}`);
 
+// ---------- v2.0.7: pesadasPI con DILUCIÓN (bug del ejemplo real) ----------
+// Lote de 100 g al 1,37% con tinta madre Melatonina 20% + PEG 80%:
+// antes daba Melatonina 1,37 g + PEG 80 g = 81,37 g (¡mal!);
+// ahora los excipientes llenan el resto: PEG 98,63 g y todo suma 100 g.
+const pesDil = pesadasPI('Melatonina', 0.0137, 100, [{ nombre: 'PEG 4000', fraccion: 0.8 }], []);
+check('pesadasPI dilución: Melatonina 1,37 g', Math.abs(pesDil[0].gramos - 1.37) < 1e-9, `act=${pesDil[0].gramos}`);
+check('pesadasPI dilución: PEG 98,63 g (no 80)', Math.abs(pesDil[1].gramos - 98.63) < 1e-9, `peg=${pesDil[1].gramos}`);
+check('pesadasPI dilución: suma = 100 g', Math.abs(pesDil.reduce((s, p) => s + p.gramos, 0) - 100) < 1e-9);
+
+// Con dos excipientes se mantienen las proporciones relativas del catálogo:
+// tinta madre 20% con PEG 60% + Cera 20% (3:1) → lote 100 g al 5%:
+// resto 95 g repartidos 3:1 = 71,25 + 23,75.
+const pesDil2 = pesadasPI('X', 0.05, 100,
+  [{ nombre: 'PEG 4000', fraccion: 0.6 }, { nombre: 'Cera carnauba', fraccion: 0.2 }], []);
+check('pesadasPI dilución 2 excipientes: PEG 71,25 g', Math.abs(pesDil2[1].gramos - 71.25) < 1e-9, `peg=${pesDil2[1].gramos}`);
+check('pesadasPI dilución 2 excipientes: Cera 23,75 g', Math.abs(pesDil2[2].gramos - 23.75) < 1e-9, `cera=${pesDil2[2].gramos}`);
+check('pesadasPI dilución 2 excipientes: suma = 100 g',
+  Math.abs(pesDil2.reduce((s, p) => s + p.gramos, 0) - 100) < 1e-9);
+
+// Sin dilución (concentración = catálogo) todo sigue exactamente igual:
+const pesIgual = pesadasPI('Melatonina', 0.2, 100, [{ nombre: 'PEG 4000', fraccion: 0.8 }], []);
+check('pesadasPI sin dilución: idéntico a antes (20 g + 80 g)',
+  Math.abs(pesIgual[0].gramos - 20) < 1e-9 && Math.abs(pesIgual[1].gramos - 80) < 1e-9);
+
+// ---------- v2.0.7: matemática del dashboard de Necesidades ----------
+// masa de tinta (g) = extrusión (mL) × cápsulas × IP.
+// 90 cápsulas a 0.139 mL/cáps con IP 0.9 → 12.51 mL... por registro:
+{
+  const ext = 0.139, caps = 90, ip = 0.9;
+  const ml = ext * caps;
+  const g = ml * ip;
+  check('necesidades: mL totales = ext × cáps', Math.abs(ml - 12.51) < 1e-9, `ml=${ml}`);
+  check('necesidades: gramos = mL × IP', Math.abs(g - 11.259) < 1e-9, `g=${g}`);
+  // y la vuelta para las jeringas del PI: mL = g ÷ IP; jeringas de 10 mL
+  check('necesidades: jeringas = ceil(g ÷ IP ÷ 10)', Math.ceil(g / ip / 10) === 2);
+}
+
 // ---------- v2.0.4: POE derivado del lote de PI ----------
 check('poeDesdeLote: FPI.01.PI013/P006 → FPI.01.PI013', poeDesdeLote('FPI.01.PI013/P006') === 'FPI.01.PI013');
 check('poeDesdeLote: sin barra → vacío', poeDesdeLote('FPI01PI013') === '');

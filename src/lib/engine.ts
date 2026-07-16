@@ -344,6 +344,13 @@ export type PesadaTeorica = {
 // desglosa el activo y los excipientes.
 // SEMÁNTICA v2.0.4: la fracción de cada excipiente es SOBRE EL TOTAL de la
 // tinta (activo + excipientes = 100%). Ej: Pregnenolona 5,7% + PEG 94,3%.
+// CORRECCIÓN v2.0.7: la concentración del LOTE puede ser distinta a la del
+// catálogo (dilución). El activo pesa cantidad × concentración del lote y
+// los excipientes se reparten TODO EL RESTO (cantidad × (1 − concentración))
+// manteniendo sus proporciones relativas del catálogo, de modo que
+// activo + excipientes = cantidad total SIEMPRE.
+// Ej: 100 g al 1,37% con tinta madre Melatonina 20% + PEG 80% →
+// Melatonina 1,37 g + PEG 98,63 g (no 80 g).
 export function pesadasPI(
   activoNombre: string,
   concentracion: number,
@@ -356,11 +363,14 @@ export function pesadasPI(
   const rows: PesadaTeorica[] = [
     { nombre: activoNombre, esPI: false, gramos: activoG },
   ];
+  const restoG = Math.max(0, cantidadTotalG - activoG); // g de excipiente del lote
+  const sumaFracciones = excipientes.reduce((s, e) => s + (e.fraccion || 0), 0);
   for (const e of excipientes) {
     const esPI = nombresTintas.some(
       (n) => n.includes(normalizar(e.nombre)) || normalizar(e.nombre).includes(n)
     );
-    rows.push({ nombre: e.nombre, esPI, gramos: cantidadTotalG * e.fraccion });
+    const proporcion = sumaFracciones > 0 ? e.fraccion / sumaFracciones : 0;
+    rows.push({ nombre: e.nombre, esPI, gramos: restoG * proporcion });
   }
   return rows;
 }

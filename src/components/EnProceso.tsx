@@ -82,6 +82,7 @@ export default function EnProceso({
                 }`}
                 style={{ background: c.bg, borderColor: c.border }}>
                 {r.paciente || 'SIN NOMBRE'} · {r.tituloFormula}
+                {r.capsulasTotales ? ` · ${r.capsulasTotales} cáps` : ''}
               </button>
             );
           })}
@@ -95,6 +96,9 @@ export default function EnProceso({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-3xl font-black uppercase leading-none tracking-tight">
                 {abierto.paciente || 'SIN NOMBRE'}
+                {abierto.capsulasTotales ? (
+                  <span className="ml-2 text-xl font-bold normal-case">({abierto.capsulasTotales} cápsulas)</span>
+                ) : null}
               </p>
               <p className="text-sm font-semibold">
                 Fórmula {abierto.tituloFormula || '—'}
@@ -143,6 +147,9 @@ export default function EnProceso({
             <div className="px-4 py-3" style={{ background: color.bg, borderBottom: `4px solid ${color.border}` }}>
               <p className="text-2xl font-black uppercase leading-none tracking-tight">
                 {r.paciente || 'SIN NOMBRE'}
+                {r.capsulasTotales ? (
+                  <span className="ml-1.5 text-base font-bold normal-case">({r.capsulasTotales} cápsulas)</span>
+                ) : null}
               </p>
             </div>
             <div className="space-y-1 px-4 py-3 text-sm text-slate-600">

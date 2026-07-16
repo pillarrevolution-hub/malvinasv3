@@ -1,4 +1,33 @@
 # M.A.L.V.I.N.A.S 2.0 — Nueva Farmacia Badra (PILL.AR)
+## v2.0.7 (16-jul-2026) — dashboard de Necesidades y pesadas de diluciones
+
+1. **Nueva solapa 📊 Necesidades**: suma en vivo, tinta por tinta, cuánta tinta hace
+   falta para cubrir TODOS los registros en **Pendientes + En producción** (gramos,
+   mL y jeringas estimadas, con detalle por paciente expandible). Cuando un paciente
+   pasa a Terminados, sus gramos dejan de contar automáticamente. Las diluciones se
+   agrupan aparte de la tinta madre (badge ⚗). El botón **«🧪 Hacer X g»** crea el
+   registro de Producto Intermedio ya precargado: cantidad (redondeada a gramos
+   enteros), jeringas, concentración, lote siguiente y pesadas teóricas — todo
+   editable como siempre. Abajo, **estadística mensual**: gramos, jeringas y lotes
+   de cada PI producido por mes (selector de meses).
+2. **Pesadas de PI corregidas para diluciones (error grave)**: cuando la
+   concentración del lote difiere de la del catálogo (ej. lote de melatonina al
+   1,37% con tinta madre al 20% + PEG 80%), los excipientes ahora llenan **todo el
+   resto** manteniendo sus proporciones: 100 g al 1,37% → Melatonina 1,37 g +
+   PEG 98,63 g = 100 g (antes calculaba PEG 80 g y la suma no daba). Sin dilución
+   el cálculo queda exactamente igual que antes.
+3. **Nombre limpio del activo en los registros de PI, en todos lados**: las
+   tarjetas de Producto Intermedio y de Terminados muestran solo el activo
+   («MELATONINA», nunca «PARA 1 MG» ni el %), con la concentración del lote al
+   lado del número de lote. `migration-v2.0.7.sql` limpia además los registros
+   viejos guardados en la base (nombre del producto y fila del activo).
+4. **Cápsulas junto al nombre del paciente**: «MOREIRA, CAROLINA LUCIA
+   (90 cápsulas)» en las tarjetas, en la cabecera de pantalla completa y en los
+   chips de arriba.
+
+**Antes de deployar: correr `migration-v2.0.7.sql` en Neon** (idempotente, tabla
+`_migraciones`; solo limpia texto de registros de PI viejos — no cambia el esquema).
+
 ## v2.0.6 (15-jul-2026) — flujo de taller
 
 1. **Tarjetas con médico**: el nombre del médico aparece junto a fórmula y lote.

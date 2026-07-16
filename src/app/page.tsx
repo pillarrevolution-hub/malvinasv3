@@ -6,6 +6,7 @@ import LectorRecetas from '@/components/LectorRecetas';
 import EnProceso from '@/components/EnProceso';
 import ProductoIntermedio from '@/components/ProductoIntermedio';
 import Terminados from '@/components/Terminados';
+import Necesidades from '@/components/Necesidades';
 import Admin from '@/components/Admin';
 
 export type Catalogos = {
@@ -21,6 +22,7 @@ const TABS = [
   { id: 'prod', label: '🖨️ En producción' },
   { id: 'pt', label: '📋 Pendientes' },
   { id: 'pi', label: '🧪 Producto Intermedio' },
+  { id: 'neces', label: '📊 Necesidades' },
   { id: 'terminados', label: '✅ Terminados' },
   { id: 'gestion', label: '🗂️ Gestión' },
 ] as const;
@@ -132,6 +134,10 @@ export default function Home() {
       {tab === 'pi' && catalogos && (
         <ProductoIntermedio registros={piProceso} catalogos={catalogos} onCambio={recargar}
           onActualizado={actualizarRegistroPi} />
+      )}
+      {tab === 'neces' && catalogos && (
+        <Necesidades registros={ptProceso} registrosPi={registrosPi} catalogos={catalogos}
+          onCambio={recargar} onIrPI={() => setTab('pi')} />
       )}
       {tab === 'terminados' && (
         <Terminados registros={ptTerm} registrosPi={piTerm} onCambio={recargar} />

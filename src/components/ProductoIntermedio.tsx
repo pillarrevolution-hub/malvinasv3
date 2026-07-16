@@ -105,9 +105,13 @@ export default function ProductoIntermedio({
                   onClick={() => setAbiertos((a) => ({ ...a, [r.id]: !abierto }))}>
                   <div className="flex items-center justify-between px-4 py-3">
                     <div>
-                      <p className="text-xl font-black uppercase leading-none">{r.tintaNombre || 'SIN TINTA'}</p>
+                      {/* Nombre limpio del activo (sin "para X mg", apodos ni %) */}
+                      <p className="text-xl font-black uppercase leading-none">
+                        {limpiarNombreTinta(r.tintaNombre) || 'SIN TINTA'}
+                      </p>
                       <p className="mt-1 text-sm font-medium text-slate-600">
                         Lote <b>{formatoLotePI(r.poe, r.loteNumero)}</b>
+                        {r.concentracion ? ` · ${fmtPct(r.concentracion)}` : ''}
                         {r.cantidadProductoG ? ` · ${r.cantidadProductoG} g` : ''}
                         {r.jeringas ? ` · ${r.jeringas} jeringas` : ''}
                       </p>
@@ -250,7 +254,7 @@ function PiEditor({
   }
 
   async function eliminar() {
-    if (!confirm(`¿Eliminar la producción de ${r.tintaNombre}?`)) return;
+    if (!confirm(`¿Eliminar la producción de ${limpiarNombreTinta(r.tintaNombre)}?`)) return;
     await fetch(`/api/registros-pi/${r.id}`, { method: 'DELETE' });
     localStorage.removeItem(DRAFT_KEY(r.id));
     onCambio();
