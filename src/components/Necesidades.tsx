@@ -6,15 +6,18 @@ import { hoyISO, sumarMeses, formatoLote, formatoLotePI, fechaAR } from '@/lib/u
 import { MESES_VENCIMIENTO } from '@/lib/config';
 import {
   extrusionCapa, pesadasPI, limpiarNombreTinta, fmtG, fmtMl, fmtPct,
+  MERMA_PI, activoConMerma,
 } from '@/lib/engine';
 
 // =====================================================================
 // 📊 NECESIDADES DE PRODUCCIÓN
 // Lee TODOS los registros en proceso (Pendientes + En producción) y suma,
-// tinta por tinta, cuánta tinta hace falta para cubrirlos. Es 100% en
-// vivo: cuando un paciente pasa a Terminados, sus gramos desaparecen de
-// acá solos. El botón "Hacer" crea el registro de Producto Intermedio ya
-// precargado (cantidad, jeringas, pesadas teóricas, lote siguiente).
+// tinta por tinta, cuánto PRINCIPIO ACTIVO hace falta para cubrirlos
+// (también muestra la tinta y los mL equivalentes). Es 100% en vivo:
+// cuando un paciente pasa a Terminados, sus gramos desaparecen de acá
+// solos. El botón "Hacer" crea el registro de PI armado DESDE EL ACTIVO:
+// activo = necesidad × 1.45 (merma 45%), total = activo ÷ concentración,
+// excipientes por porcentaje. Es reversible con «↩ Deshacer».
 // Abajo: estadística mensual de PI producido (gramos, jeringas, lotes).
 // =====================================================================
 
@@ -40,7 +43,8 @@ type GrupoNecesidad = {
   ip: number;
   poe: string;
   ml: number;
-  gramos: number;
+  gramos: number; // g de TINTA (activo + excipiente) que consume la impresora
+  gramosActivo: number; // g de PRINCIPIO ACTIVO adentro de esa tinta
   jeringas: number;
   detalles: DetalleNecesidad[];
 };
@@ -71,6 +75,8 @@ export default function Necesidades({
 }) {
   const [expandido, setExpandido] = useState<Record<string, boolean>>({});
   const [creando, setCreando] = useState<string | null>(null);
+  // Lotes creados desde este dashboard en esta visita → permite Deshacer
+  const [hechos, setHechos] = useState<Record<string, { id: number; lote: string }>>({});
 
   // ---------------- Necesidades en vivo ----------------
   const { grupos, incompletos } = useMemo(() => {
@@ -109,12 +115,13 @@ export default function Necesidades({
             esDilucion: t ? Math.abs(t.concentracion - c.concentracion) > 1e-9 : false,
             ip: c.ip,
             poe: c.poe || t?.poe || '',
-            ml: 0, gramos: 0, jeringas: 0, detalles: [],
+            ml: 0, gramos: 0, gramosActivo: 0, jeringas: 0, detalles: [],
           };
           mapa.set(key, g);
         }
         g.ml += ml;
         g.gramos += gramos;
+        g.gramosActivo += gramos * c.concentracion; // activo = tinta × concentración
         g.detalles.push({
           registroId: r.id, paciente: r.paciente, formula: r.tituloFormula,
           lote: formatoLote(r.lotePrefijo, r.loteNumero),
@@ -124,7 +131,7 @@ export default function Necesidades({
     }
     const grupos = Array.from(mapa.values())
       .map((g) => ({ ...g, jeringas: Math.ceil(g.ml / VOLUMEN_JERINGA_ML) }))
-      .sort((a, b) => b.gramos - a.gramos);
+      .sort((a, b) => b.gramosActivo - a.gramosActivo);
     return { grupos, incompletos };
   }, [registros, catalogos.tintas]);
 
@@ -135,7 +142,10 @@ export default function Necesidades({
       const t = g.tintaId != null ? catalogos.tintas.find((x) => x.id === g.tintaId) : undefined;
       const poe = t?.poe || g.poe;
       const nl = await fetch(`/api/next-lote-pi?poe=${encodeURIComponent(poe)}`).then((x) => x.json());
-      const cantidad = Math.ceil(g.gramos); // redondeo a g enteros — editable después
+      // El lote se arma DESDE EL ACTIVO: necesidad × 1.45 (merma 45%),
+      // y el total de producto sale por porcentaje. Todo editable después.
+      const activo = activoConMerma(g.gramosActivo);
+      const cantidad = Math.round((activo / g.concentracion) * 100) / 100; // g de producto total
       const jeringas = Math.ceil(cantidad / g.ip / VOLUMEN_JERINGA_ML);
       const teoricas = pesadasPI(g.nombreLimpio, g.concentracion, cantidad, t?.excipientes ?? [], catalogos.tintas);
       const materiasPrimas: MateriaPrima[] = teoricas.map((p, i) => ({
@@ -170,12 +180,30 @@ export default function Necesidades({
         }),
       });
       if (!res.ok) throw new Error();
+      const creado = await res.json();
+      setHechos((h) => ({ ...h, [g.key]: { id: creado.id, lote: formatoLotePI(poe, nl.proximo) } }));
       onCambio();
-      onIrPI();
     } catch {
       alert('No se pudo crear el registro de PI. Revisá la conexión.');
     } finally {
       setCreando(null);
+    }
+  }
+
+  // Deshacer: elimina el lote de PI recién creado desde este dashboard
+  async function deshacer(key: string) {
+    const h = hechos[key];
+    if (!h) return;
+    try {
+      const res = await fetch(`/api/registros-pi/${h.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setHechos((prev) => {
+        const { [key]: _, ...resto } = prev;
+        return resto;
+      });
+      onCambio();
+    } catch {
+      alert('No se pudo deshacer. Podés eliminarlo desde la solapa Producto Intermedio.');
     }
   }
 
@@ -193,14 +221,15 @@ export default function Necesidades({
   const [mes, setMes] = useState(() => hoyISO().slice(0, 7));
 
   const statsMes = useMemo(() => {
-    const mapa = new Map<string, { nombre: string; gramos: number; jeringas: number; lotes: number; enProceso: number }>();
+    const mapa = new Map<string, { nombre: string; gramos: number; activo: number; jeringas: number; lotes: number; enProceso: number }>();
     for (const r of registrosPi) {
       const f = r.fechaElab || (r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : '');
       if (!f || f.slice(0, 7) !== mes) continue;
       const nombre = limpiarNombreTinta(r.tintaNombre || r.nombreProducto) || 'SIN NOMBRE';
       const key = nombre.toUpperCase();
-      const s = mapa.get(key) ?? { nombre, gramos: 0, jeringas: 0, lotes: 0, enProceso: 0 };
+      const s = mapa.get(key) ?? { nombre, gramos: 0, activo: 0, jeringas: 0, lotes: 0, enProceso: 0 };
       s.gramos += r.cantidadProductoG ?? 0;
+      s.activo += (r.cantidadProductoG ?? 0) * (r.concentracion ?? 0);
       s.jeringas += r.jeringas ?? 0;
       s.lotes += 1;
       if (r.estado === 'en_proceso') s.enProceso += 1;
@@ -216,8 +245,9 @@ export default function Necesidades({
         <h2 className="section-title">📊 Necesidad de tinta para cubrir Pendientes + En producción</h2>
         <p className="mb-3 text-sm text-slate-500">
           Se calcula en vivo con los pacientes pendientes y en producción; cuando un lote pasa a
-          Terminados, sus gramos dejan de contar solos. La cantidad se precarga redondeada a gramos
-          enteros y <b>todo queda editable</b> en el registro de PI.
+          Terminados, sus gramos dejan de contar solos. El número grande es el <b>principio activo</b>;
+          «Hacer» arma el lote desde el activo con <b>45% de merma</b> (total = activo ÷ concentración,
+          excipientes por porcentaje) y <b>todo queda editable</b> en el registro de PI.
         </p>
 
         {incompletos.length > 0 && (
@@ -237,6 +267,9 @@ export default function Necesidades({
           <div className="grid gap-4 lg:grid-cols-2">
             {grupos.map((g) => {
               const abierto = expandido[g.key] ?? false;
+              const hecho = hechos[g.key];
+              const activo = activoConMerma(g.gramosActivo);
+              const producto = Math.round((activo / g.concentracion) * 100) / 100;
               return (
                 <div key={g.key} className="card overflow-hidden border-l-4 border-l-indigo-600">
                   <div className="flex flex-wrap items-start justify-between gap-2 bg-indigo-50/60 px-4 py-3">
@@ -250,8 +283,12 @@ export default function Necesidades({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-black leading-none text-indigo-700">{fmtG(g.gramos)}</p>
-                      <p className="text-xs text-slate-500">{fmtMl(g.ml, 1)} · ~{g.jeringas} jeringa{g.jeringas === 1 ? '' : 's'}</p>
+                      <p className="text-2xl font-black leading-none text-indigo-700">
+                        {fmtG(g.gramosActivo)} <span className="text-sm font-bold">de activo</span>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        = {fmtG(g.gramos)} de tinta · {fmtMl(g.ml, 1)} · ~{g.jeringas} jeringa{g.jeringas === 1 ? '' : 's'}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
@@ -259,11 +296,30 @@ export default function Necesidades({
                       onClick={() => setExpandido((e) => ({ ...e, [g.key]: !abierto }))}>
                       {abierto ? '▾' : '▸'} {g.detalles.length} paciente{g.detalles.length === 1 ? '' : 's'}
                     </button>
-                    <button className="btn-primary" disabled={creando === g.key}
-                      title="Crea el registro de Producto Intermedio con cantidad, jeringas y pesadas teóricas precargadas"
-                      onClick={() => hacer(g)}>
-                      {creando === g.key ? '… creando' : `🧪 Hacer ${Math.ceil(g.gramos)} g →`}
-                    </button>
+                    {hecho ? (
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="badge bg-emerald-100 font-mono text-emerald-800">✔ {hecho.lote} creado</span>
+                        <button className="font-semibold text-indigo-700 hover:underline" onClick={onIrPI}>
+                          Ver en Producto Intermedio →
+                        </button>
+                        <button className="font-semibold text-red-600 hover:underline"
+                          title="Elimina el lote de PI recién creado"
+                          onClick={() => deshacer(g.key)}>
+                          ↩ Deshacer
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-right">
+                        <button className="btn-primary" disabled={creando === g.key}
+                          title={`Crea el registro de PI armado desde el activo: ${activo} g de activo (necesidad + ${MERMA_PI * 100}% de merma) ÷ ${fmtPct(g.concentracion)} = ${producto} g de producto. Pesadas, jeringas y lote precargados; todo editable.`}
+                          onClick={() => hacer(g)}>
+                          {creando === g.key ? '… creando' : `🧪 Hacer ${activo} g de activo →`}
+                        </button>
+                        <p className="mt-1 text-[11px] text-slate-400">
+                          con {MERMA_PI * 100}% de merma → {producto} g de producto
+                        </p>
+                      </div>
+                    )}
                   </div>
                   {abierto && (
                     <table className="w-full border-t border-slate-100 text-xs">
@@ -279,7 +335,9 @@ export default function Necesidades({
                             <td className="px-4 py-1 font-semibold">{d.paciente || 'SIN NOMBRE'} · {d.formula}</td>
                             <td className="font-mono">{d.lote}</td>
                             <td>{d.enProduccion ? '🖨️ en producción' : '📋 pendiente'}</td>
-                            <td className="pr-4 text-right">{fmtG(d.gramos)} · {fmtMl(d.ml, 1)}</td>
+                            <td className="pr-4 text-right">
+                              {fmtG(d.gramos * g.concentracion)} act. · {fmtG(d.gramos)} tinta · {fmtMl(d.ml, 1)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -315,7 +373,8 @@ export default function Necesidades({
               <thead>
                 <tr className="bg-slate-50 text-left text-xs uppercase text-slate-500">
                   <th className="px-4 py-2">Producto intermedio</th>
-                  <th className="text-right">Gramos</th>
+                  <th className="text-right">Activo (g)</th>
+                  <th className="text-right">Tinta (g)</th>
                   <th className="text-right">Jeringas</th>
                   <th className="px-4 text-right">Lotes</th>
                 </tr>
@@ -324,7 +383,8 @@ export default function Necesidades({
                 {statsMes.map((s, i) => (
                   <tr key={i} className="border-t border-slate-100">
                     <td className="px-4 py-2 font-bold uppercase">{s.nombre}</td>
-                    <td className="text-right font-semibold">{fmtG(s.gramos)}</td>
+                    <td className="text-right font-semibold">{fmtG(s.activo)}</td>
+                    <td className="text-right">{fmtG(s.gramos)}</td>
                     <td className="text-right">{s.jeringas}</td>
                     <td className="px-4 text-right">
                       {s.lotes}

@@ -129,6 +129,40 @@ export default function ProductoIntermedio({
   );
 }
 
+// Campo "Cantidad de principio activo (g)": la forma primaria de cargar un
+// lote. Al escribir el activo, la cantidad de producto se deriva sola
+// (activo ÷ concentración) y los excipientes salen después por porcentaje
+// con «Calcular pesadas teóricas». Editar la cantidad de producto a mano
+// sigue funcionando: este campo muestra el activo equivalente (producto ×
+// concentración). Mientras se tipea usa un valor local para no pelearse
+// con el redondeo.
+function ActivoInput({ r, set }: { r: RegistroPi; set: (p: Partial<RegistroPi>) => void }) {
+  const [local, setLocal] = useState<string | null>(null);
+  const derivado =
+    r.cantidadProductoG != null && r.concentracion
+      ? Number((r.cantidadProductoG * r.concentracion).toFixed(2))
+      : null;
+  if (!r.concentracion) {
+    return <input className="input" disabled placeholder="definí la concentración" />;
+  }
+  return (
+    <input
+      className="input border-teal-300 font-semibold"
+      type="number" step="any"
+      value={local ?? (derivado ?? '')}
+      onFocus={() => setLocal(derivado != null ? String(derivado) : '')}
+      onBlur={() => setLocal(null)}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        const v = Number(e.target.value);
+        if (!e.target.value) set({ cantidadProductoG: null });
+        else if (v > 0 && r.concentracion)
+          set({ cantidadProductoG: Number((v / r.concentracion).toFixed(2)) });
+      }}
+    />
+  );
+}
+
 // ================= Editor de un lote de PI =================
 function PiEditor({
   registro,
@@ -297,6 +331,11 @@ function PiEditor({
           <span className="badge w-full justify-center bg-teal-50 py-2 font-mono text-teal-800">
             {formatoLotePI(r.poe, r.loteNumero)}
           </span>
+        </div>
+        <div>
+          <label className="label text-teal-700">Cant. de PRINCIPIO ACTIVO (g)</label>
+          <ActivoInput r={r} set={set} />
+          <p className="mt-0.5 text-[10px] text-slate-400">el producto total se calcula solo: activo ÷ concentración</p>
         </div>
         <div>
           <label className="label">Cantidad de producto (g)</label>

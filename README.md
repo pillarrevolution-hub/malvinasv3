@@ -1,4 +1,29 @@
 # M.A.L.V.I.N.A.S 2.0 — Nueva Farmacia Badra (PILL.AR)
+## v2.0.8 (16-jul-2026) — necesidades en activo, merma 45% y «Hacer» reversible
+
+1. **El dashboard ahora habla en gramos de PRINCIPIO ACTIVO** (el número
+   grande), con la equivalencia en tinta, mL y jeringas al lado. Antes el
+   número era gramos de TINTA (activo + excipiente), por eso el lote creado
+   "traía la mitad de activo" a concentración 50%.
+2. **«Hacer» arma el lote desde el activo con 45% de merma**:
+   activo del lote = necesidad × 1,45 (redondeado hacia arriba a 2
+   decimales), total de producto = activo ÷ concentración, excipientes por
+   porcentaje. Ej.: necesidad 19,5 g de levadura de selenio → lote con
+   28,28 g de activo → 56,56 g de producto al 50% (28,28 + 28,28). Todo
+   editable como siempre.
+3. **Nuevo campo «Cant. de PRINCIPIO ACTIVO (g)»** en el editor de PI, la
+   forma primaria de cargar un lote: escribís el activo y la cantidad de
+   producto se calcula sola (activo ÷ concentración). Editar la cantidad de
+   producto a mano sigue funcionando (el activo se muestra en equivalencia).
+4. **«Hacer» es reversible**: al crear el lote, la tarjeta muestra
+   «✔ Lote … creado · Ver en Producto Intermedio → · ↩ Deshacer». Deshacer
+   elimina el lote recién creado. (Ya existían: «Eliminar» dentro de cada
+   PI y «↩ Reabrir» en Terminados.) Ya no salta de solapa al crear, así se
+   pueden disparar varios «Hacer» seguidos.
+5. **Estadística mensual con columna «Activo (g)»** además de la tinta.
+
+Sin migración de base: esta versión es solo código.
+
 ## v2.0.7 (16-jul-2026) — dashboard de Necesidades y pesadas de diluciones
 
 1. **Nueva solapa 📊 Necesidades**: suma en vivo, tinta por tinta, cuánta tinta hace

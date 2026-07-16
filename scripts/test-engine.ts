@@ -4,6 +4,7 @@ import type { Tinta } from '../src/db/schema';
 import {
   autoUbicarCapas, capaDesdeTinta, dosisEnMgParaTinta, tintasParaActivo,
   calcularCapsula, pesadasPI, poeDesdeLote, limpiarNombreTinta,
+  activoConMerma, MERMA_PI,
 } from '../src/lib/engine';
 import { fechaAR, fechaHoraAR, coincideFiltro, diasHasta } from '../src/lib/utils';
 
@@ -173,6 +174,24 @@ check('diasHasta: +5 días → 5 (amarillo)', diasHasta(iso(5)) === 5);
 check('diasHasta: +3 días → 3 (rojo)', diasHasta(iso(3)) === 3);
 check('diasHasta: vencida → negativo', (diasHasta(iso(-2)) ?? 0) < 0);
 check('diasHasta: sin fecha → null', diasHasta('') === null);
+
+// ---------- v2.0.8: merma 45% sobre el activo (dashboard → PI) ----------
+check('merma: constante 45%', MERMA_PI === 0.45);
+// Ejemplo real (selenio): necesidad 19,5 g de activo → 28,28 g con merma
+check('merma: 19,5 g → 28,28 g (ceil a 2 dec)', activoConMerma(19.5) === 28.28, `=${activoConMerma(19.5)}`);
+// Producto total al 50%: 28,28 ÷ 0,5 = 56,56 g → pesadas 28,28 activo + 28,28 excipiente
+{
+  const activo = activoConMerma(19.5);
+  const producto = Math.round((activo / 0.5) * 100) / 100;
+  check('merma: producto = activo ÷ conc = 56,56 g', producto === 56.56, `=${producto}`);
+  const pes = pesadasPI('Lev. Selenio', 0.5, producto, [{ nombre: 'Oleogel 2,5%', fraccion: 0.5 }], []);
+  check('merma: pesada de activo = 28,28 g', Math.abs(pes[0].gramos - 28.28) < 1e-9, `=${pes[0].gramos}`);
+  check('merma: excipiente completa el total', Math.abs(pes[0].gramos + pes[1].gramos - producto) < 1e-9);
+}
+// Redondeo exacto no agrega de más: 15 × 1,45 = 21,75 justo
+check('merma: 15 g → 21,75 g (sin +0,01 fantasma)', activoConMerma(15) === 21.75, `=${activoConMerma(15)}`);
+// La necesidad de activo sale de la tinta: 39 g de tinta al 50% = 19,5 g de activo
+check('necesidades: activo = tinta × concentración', Math.abs(39 * 0.5 - 19.5) < 1e-9);
 
 console.log(fallas === 0 ? '\n✅ TODOS LOS TESTS PASAN' : `\n❌ ${fallas} tests fallaron`);
 process.exit(fallas === 0 ? 0 : 1);

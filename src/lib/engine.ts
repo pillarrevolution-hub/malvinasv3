@@ -29,6 +29,17 @@ export const EXTRUSION_MINIMA_ML = 0.03;
 export const OBJETIVO_LLENADO_ML = 0.8;
 export const MINIMO_ACEPTADO_ML = 0.55;
 
+// Merma de producción de PI: al hacer un lote se pesa un 45% MÁS de cada
+// principio activo que la necesidad calculada (pérdidas en vaso, jeringa,
+// descarte de impresora). El excipiente acompaña solo, porque el total del
+// lote se deriva del activo por porcentaje: total = activo ÷ concentración.
+export const MERMA_PI = 0.45;
+
+// Activo a producir con merma, redondeado HACIA ARRIBA a 2 decimales.
+export function activoConMerma(gActivoNecesario: number): number {
+  return Math.ceil(gActivoNecesario * (1 + MERMA_PI) * 100 - 1e-7) / 100;
+}
+
 // ---------- Conversión de unidades a mg ----------
 export function normUnidad(unidad: string): string {
   const u = (unidad ?? '').trim().toLowerCase().replace('μ', 'µ');
